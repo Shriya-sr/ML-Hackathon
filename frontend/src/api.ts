@@ -5,7 +5,9 @@ const STORAGE_KEY = "pathsnap.apiUrl";
 export function defaultApiUrl(): string {
   const env = (import.meta.env.VITE_API_URL as string | undefined)?.trim();
   if (env) return env.replace(/\/$/, "");
-  const host = typeof window !== "undefined" && window.location.hostname ? window.location.hostname : "localhost";
+  const h = typeof window !== "undefined" && window.location.hostname ? window.location.hostname : "127.0.0.1";
+  // On Windows "localhost" tries IPv6 first and adds ~2 s per request; the API listens on IPv4.
+  const host = h === "localhost" ? "127.0.0.1" : h;
   return `http://${host}:8000`;
 }
 
