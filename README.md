@@ -2,9 +2,16 @@
 
 UE24CS352A Machine Learning hackathon · PES University, Department of CSE, RR Campus
 
+
+
 PathSnap reconstructs the road route a vehicle actually drove from noisy, gappy GPS fixes. It generates candidate
 road segments per fix, scores them with a supervised classifier, and decodes a drivable route with an HMM and
 the Viterbi algorithm. The result is served by a FastAPI backend (Laptop 1) to a React evaluator UI (Laptop 2).
+
+
+
+
+
 
 ```
 raw .track/.nodes/.arcs ─► cleaning + UTM projection ─► STRtree candidates (50 m, K=10) ─► 21 features
@@ -22,7 +29,12 @@ see [`reports/final/RESULTS_SUMMARY.md`](reports/final/RESULTS_SUMMARY.md).
 
 | Path | Content |
 |---|---|
-| `src/pathsnap/` | the Python package: `data/` (loaders, validation, cleaning, label alignment), `geography/` (UTM projection, geometry, STRtree, road graph), `features/`, `models/`, `training/` (grouped CV), `evaluation/` (metrics, route metrics), `optimisation/` (Optuna), `decoding/` (HMM, Viterbi), `inference/` (pipeline + server-side evaluator), `visualisation/` (plots, Folium) |
+| `src/pathsnap/` | the Python package: `data/` (loaders, validation, cleaning, label alignment), `geography/` (UTM projection, geometry, STRtree, road graph), `features/`, `models/`, `training/` (grouped CV), `evaluation/` (metrics, route metrics), `optimisation/` (Optuna), `decoding/` (HMM, Viterbi), `inference/` 
+
+
+
+
+(pipeline + server-side evaluator), `visualisation/` (plots, Folium) |
 | `scripts/` | reproducible experiment drivers (EDA, features, training, optimisation, HMM tuning, evaluation, maps, report) |
 | `configs/` | every setting: data, features, models, HMM, optimisation, API |
 | `backend/` | FastAPI app (`main.py`, `routers/`, `services/`, `schemas/`, `tests/`) |
@@ -97,7 +109,7 @@ npm.cmd run dev                                     # open http://localhost:5173
 Full two-laptop procedure (IP lookup, firewall rule, connectivity checks, demo script, failure handling):
 [`docs/deployment.md`](docs/deployment.md). Command sheets: [`docs/LAPTOP1_BACKEND_COMMANDS.md`](docs/LAPTOP1_BACKEND_COMMANDS.md),
 [`docs/LAPTOP2_FRONTEND_COMMANDS.md`](docs/LAPTOP2_FRONTEND_COMMANDS.md). Per-member plan: [`docs/TEAM_ACTION_PLAN.md`](docs/TEAM_ACTION_PLAN.md).
-
+#Implementing hmm using the transition as base features
 ### API
 
 | Method | Endpoint | Purpose |
