@@ -111,7 +111,10 @@ def fit_verdict(r) -> str:
              f"({st_vs_cv:+.4f} vs CV)."]
     if gap_f1 > 0.03:
         parts.append("The gap is large relative to the fold-to-fold spread, so the model fits training trips noticeably better than unseen "
-                     "trips: clear signs of overfitting (memorisation of training rows).")
+                     "trips: clear signs of overfitting (fully grown trees memorise training rows).")
+        if r["cv_macro_f1"] >= r["_best_cv"] - 0.001:
+            parts.append("Its validation score is nevertheless among the best, so bagging keeps this memorisation from hurting "
+                         "generalisation; stronger leaf/depth limits would shrink the gap without a clear validation gain.")
     elif gap_f1 > 0.01:
         parts.append("A moderate gap: some fitting to training rows, but validation performance stays close and stable, so variance is "
                      "under control (mild overfitting).")
@@ -121,6 +124,9 @@ def fit_verdict(r) -> str:
     if r["cv_macro_f1"] < best - 0.02:
         parts.append(f"Its validation Macro-F1 is {best - r['cv_macro_f1']:.3f} below the best model while the training score is also low, "
                      "which points to underfitting (the model family is too restrictive for these features).")
+    elif r["cv_macro_f1"] < best - 0.005 and r["train_macro_f1"] < best:
+        parts.append(f"However, even its training-fold score ({r['train_macro_f1']:.4f}) is below the best model's validation score "
+                     f"({best:.4f}): the limitation is bias rather than variance, i.e. mild underfitting relative to the tree ensembles.")
     if abs(st_vs_cv) <= 2 * r["cv_macro_f1_std"]:
         parts.append("The student-test score lies within two fold standard deviations of CV, so CV generalised to the unseen trips.")
     return " ".join(parts)
@@ -392,14 +398,26 @@ def build_pdf(d, best):
     # selection
     rf = s.set_index("model")
     hgb = rf.loc["hist_gradient_boosting"]
+    folds = {m: pd.read_csv(RES / f"cv_folds_{m}.csv").set_index("fold") for m in s["model"]}
+    rows = [["HGB minus model (same 5 folds)", "Macro-F1: folds HGB better", "mean Δ Macro-F1", "log loss: folds HGB better", "mean Δ log loss"]]
+    for m in s["model"]:
+        if m == "hist_gradient_boosting":
+            continue
+        dF = folds["hist_gradient_boosting"].val_macro_f1 - folds[m].val_macro_f1
+        dL = folds["hist_gradient_boosting"].val_log_loss - folds[m].val_log_loss
+        rows.append([rf.loc[m, "display"], f"{int((dF > 0).sum())}/5", f"{dF.mean():+.4f}", f"{int((dL < 0).sum())}/5", f"{dL.mean():+.4f}"])
+    rfm = rf.loc["random_forest"]
     story += [P("5.2 Model selection", H2), P(
-        f"Ranked by CV Macro-F1 the leader is {best['display']} ({best['cv_macro_f1']:.4f} ± {best['cv_macro_f1_std']:.4f}). "
-        f"HistGradientBoosting scores {hgb.cv_macro_f1:.4f} ± {hgb.cv_macro_f1_std:.4f}; the differences among the top tree ensembles "
-        f"are far smaller than the fold-to-fold standard deviation, i.e. not distinguishable on this data. Among them HGB has the "
-        f"lowest/near-lowest log loss (student {hgb.st_log_loss:.4f}), trains in {hgb.fit_s_full:.1f} s (Random Forest "
-        f"{rf.loc['random_forest'].fit_s_full:.1f} s), scores {hgb.inference_ms_per_1k_fixes:.1f} ms per 1000 fixes and its artifact is "
-        f"{hgb.model_size_mb:.1f} MB (Random Forest {rf.loc['random_forest'].model_size_mb:.0f} MB). Fast refits make a 40-trial "
-        "Bayesian search with 5-fold CV feasible, and its directly optimised log loss suits the HMM emissions. HGB was therefore selected.")]
+        f"Ranked by mean CV Macro-F1 the leader is {best['display']} ({best['cv_macro_f1']:.4f} ± {best['cv_macro_f1_std']:.4f}); "
+        f"HistGradientBoosting scores {hgb.cv_macro_f1:.4f} ± {hgb.cv_macro_f1_std:.4f}. Because every model uses the same folds, paired "
+        "per-fold differences are more informative than the overlapping standard deviations (table below). HGB beats the linear, "
+        "generative, instance-based and kernel models in every fold on both Macro-F1 and log loss, so the tree-based family is "
+        "clearly preferable. Against Random Forest the comparison is a genuine tie: RF has slightly better log loss "
+        f"(student {rfm.st_log_loss:.4f} vs {hgb.st_log_loss:.4f}) while HGB has the higher student-test Top-1 ({hgb.st_top1:.4f} vs "
+        f"{rfm.st_top1:.4f}). The decision was therefore taken on secondary criteria: HGB trains in {hgb.fit_s_full:.1f} s "
+        f"(RF {rfm.fit_s_full:.1f} s), scores {hgb.inference_ms_per_1k_fixes:.1f} ms per 1000 fixes (RF {rfm.inference_ms_per_1k_fixes:.1f}), "
+        f"and its artifact is {hgb.model_size_mb:.1f} MB (RF {rfm.model_size_mb:.0f} MB), which makes a 40-trial Bayesian search with "
+        "5-fold CV feasible and deployment on Laptop 1 light. HGB was selected."), table(rows)]
     # ---- Bayesian optimisation
     story += [PageBreak(), P("6. Bayesian hyperparameter optimisation (HistGradientBoosting)", H1)]
     if d["opt"]:
@@ -437,7 +455,7 @@ def build_pdf(d, best):
     hp = d["hmm"]["params"] if d["hmm"] else {}
     story += [P("<b>1. Hidden states.</b> At fix t the states are its candidate arcs (top 8 by emission score). Each state keeps arc_id, "
                 "projection fraction, perpendicular distance and classifier probability, so the candidate→road-segment correspondence is preserved."),
-              P(f"<b>2. Emissions.</b> log E_t(c) = w_clf · log max(P_clf(c), 10⁻⁶) − w_dist · ½(d/σ)², with tuned w_clf = {hp.get('w_clf')}, "
+              P(f"<b>2. Emissions.</b> log E_t(c) = w_clf · log max(P_clf(c), 1e-6) − w_dist · ½(d/σ)², with tuned w_clf = {hp.get('w_clf')}, "
                 f"w_dist = {hp.get('w_dist')}, σ = {hp.get('sigma_m')} m."),
               P(f"<b>3. Transitions.</b> For a at t−1 and b at t, d_route is the driving distance from a's projection to b's projection over the "
                 f"directed network (bounded Dijkstra, cached per source node) and d_gps the straight distance between the fixes: "
@@ -470,9 +488,15 @@ def build_pdf(d, best):
                     f"transitions {dec['clf_invalid_transitions']:.0f} → {dec['recon_invalid_transitions']:.0f} after reconstruction. Per trip, the HMM "
                     f"improved Top-1 on {len(better)} of {len(dt)} trips" + (f" and reduced it on {len(worse)} ({', '.join(worse.trip_id)})" if len(worse) else "") +
                     f". In total it corrected {int(dt.n_fixed_by_hmm.sum())} fixes that the classifier had wrong and broke {int(dt.n_broken_by_hmm.sum())} "
-                    "that the classifier had right. Typical gains: flips onto the reverse or a parallel arc, junction confusions. Where it does not "
-                    "help: chain breaks at large gaps or unreachable transitions (each chain restarts from emissions), and stretches where the "
-                    "reference itself is broken or the GPS is far from any road, so the smoothest network path disagrees with the reference.")]
+                    f"that the classifier had right. By error type (classifier → HMM): wrong direction of the right road "
+                    f"{dec['clf_err_reverse_by_hmm']:.0f} → {dec['hmm_err_reverse_by_hmm']:.0f}, neighbouring arc at a junction "
+                    f"{dec['clf_err_adjacent_by_hmm']:.0f} → {dec['hmm_err_adjacent_by_hmm']:.0f}, a different road "
+                    f"{dec['clf_err_other_by_hmm']:.0f} → {dec['hmm_err_other_by_hmm']:.0f}. Where it does not help: the remaining direction "
+                    "and junction errors occur mostly while the vehicle is slow or stationary (no usable heading, so both directions explain the "
+                    f"fixes equally); {dec['hmm_transition_breaks']:.0f} chain restarts (no valid transition) and {dec['hmm_gap_breaks']:.0f} gap breaks "
+                    "make the decoder restart from emissions; and where the GPS runs far from the reference or the reference itself is broken, "
+                    "the smoothest network path can disagree with the reference. The tuned decoder parameters were also compared with the "
+                    f"defaults on the same trips: Top-1 {d['dec']['summary']['final_default_hmm']['hmm_top1']:.4f} (default) vs {dec['hmm_top1']:.4f} (tuned).")]
         rows = [["Trip", "fixes", "miss rate", "clf Top-1", "HMM Top-1", "clf contin.", "recon contin.", "fixed", "broken", "chains"]]
         for _, r in dt.iterrows():
             rows.append([r.trip_id, int(r.n_fixes), f"{r.miss_rate:.4f}", f"{r.clf_top1:.4f}", f"{r.hmm_top1:.4f}", f"{r.clf_route_continuity:.3f}",
@@ -521,10 +545,14 @@ def build_pdf(d, best):
         "parked periods, so labels are approximate; KNN and SVM were trained on subsamples; the evaluator partition was not available, so "
         "final-evaluation numbers cannot be reported here; the two-laptop LAN demonstration must be performed and captured by the team.")]
     story += [P("12. Conclusion", H1), P(
-        "A complete, reproducible map-matching system was built and evaluated with trip-grouped validation. Tree ensembles clearly beat "
-        "linear, generative and instance-based baselines on candidate classification; HistGradientBoosting gives the best balance of accuracy, "
-        "probability quality and cost. Sequential decoding with an HMM that respects network connectivity adds a large, consistent gain in "
-        "accuracy and especially in route continuity, turning independent noisy decisions into drivable routes.")]
+        "A complete, reproducible map-matching system was built and evaluated with trip-grouped validation. Gradient-boosted and bagged "
+        "tree ensembles beat linear, generative, instance-based and kernel models consistently across folds, although by modest margins on "
+        "Macro-F1 (the heading and relative-distance features already make the problem nearly separable for a linear model); "
+        "HistGradientBoosting gives the best balance of accuracy, probability quality and cost, and Bayesian optimisation added a small, "
+        "within-noise gain on CV with a clearer improvement in log loss. The largest gain comes from sequential decoding: an HMM that "
+        "respects network connectivity improved Top-1 on every student-test trip and turned independent noisy decisions into "
+        "almost perfectly drivable routes. The remaining errors are dominated by direction and junction ambiguity while the vehicle is "
+        "slow or stationary, and by candidate misses.")]
     story += [P("References", H1)] + [P(x, SMALL) for x in [
         "[1] P. Newson and J. Krumm, 'Hidden Markov map matching through noise and sparseness', ACM SIGSPATIAL GIS, 2009.",
         "[2] A. J. Viterbi, 'Error bounds for convolutional codes and an asymptotically optimum decoding algorithm', IEEE Trans. Inf. Theory, 1967.",
@@ -552,9 +580,56 @@ def build_pdf(d, best):
     print("wrote", OUT.relative_to(ROOT))
 
 
+def write_quick_revision(d):
+    s = d["summary"].sort_values("cv_macro_f1", ascending=False)
+    L = ["# Quick Revision (generated by scripts/build_report.py from experiment records)", "",
+         "## Pipeline", "raw .track/.nodes/.arcs → clean + per-trip UTM → STRtree candidates (R=50 m, K=10, fallback 150 m) → "
+         "21 features → HistGradientBoosting P(correct) → HMM (emission = classifier log-prob, transition = −|d_route − d_gps|/β "
+         "− U-turn penalty) → segmented Viterbi → shortest-path reconstruction → FastAPI → React UI. Labels: monotone DP "
+         "alignment of fixes to .route (server-side/training only).", "",
+         "## Data", "80 train trips (208 417 fixes), 10 student-test (19 160), evaluator trips not supplied. 1 Hz; 135 gaps > 30 s "
+         "in 30 trips; 14 route breaks; candidate miss rate 1.14% train / 0.15% student-test.", "",
+         "## Models (CV = 5-fold GroupKFold by trip; ST = student-test, classifier only)", "",
+         "| Model | CV Macro-F1 | CV Top-1 | ST Top-1 | ST Macro-F1 | ST log loss | gap (train−val F1) |", "|---|---|---|---|---|---|---|"]
+    for _, r in s.iterrows():
+        L.append(f"| {r.display} | {r.cv_macro_f1:.4f}±{r.cv_macro_f1_std:.4f} | {r.cv_top1:.4f} | {r.st_top1:.4f} | "
+                 f"{r.st_macro_f1:.4f} | {r.st_log_loss:.4f} | {r.gap_macro_f1:+.4f} |")
+    if d["opt"]:
+        o, t = d["opt"], d["tvu"]
+        L += ["", "## Bayesian optimisation", f"Optuna TPE, {o['n_trials']} trials ({o['n_complete']} complete, {o['n_pruned']} pruned), "
+              f"objective mean CV Macro-F1, {o['search_seconds'] / 60:.0f} min. Best: " +
+              ", ".join(f"{k}={round(v, 4) if isinstance(v, float) else v}" for k, v in o["best_params"].items()) + ".",
+              f"Tuned vs untuned: CV Macro-F1 {t.loc['cv_macro_f1', 'untuned']:.4f} → {t.loc['cv_macro_f1', 'tuned']:.4f}; "
+              f"ST Top-1 {t.loc['st_top1', 'untuned']:.4f} → {t.loc['st_top1', 'tuned']:.4f}; ST log loss "
+              f"{t.loc['st_log_loss', 'untuned']:.4f} → {t.loc['st_log_loss', 'tuned']:.4f}. Deployed: {o['selected_final']}."]
+    if d["dec"]:
+        f = d["dec"]["summary"]["final"]
+        hp = d["hmm"]["params"]
+        L += ["", "## HMM (student-test, final classifier)",
+              f"Params: w_clf={hp['w_clf']}, beta={hp['beta_m']} m, w_dist={hp['w_dist']}, U-turn={hp['uturn_penalty']}, vmax={hp['vmax_mps']} m/s, "
+              f"gap break > {hp['max_gap_s']} s, top-{hp['max_states']} states.",
+              f"Top-1 {f['clf_top1']:.4f} → {f['hmm_top1']:.4f}; route continuity {f['clf_route_continuity']:.3f} → {f['hmm_route_continuity']:.3f} "
+              f"(→ {f['recon_route_continuity']:.3f} with reconstruction); route F1 {f['clf_route_f1']:.3f} → {f['recon_route_f1']:.3f}; "
+              f"edit similarity {f['clf_edit_similarity']:.3f} → {f['recon_edit_similarity']:.3f}.",
+              f"Fixed {f['n_fixed_by_hmm']:.0f} fixes, broke {f['n_broken_by_hmm']:.0f}. Error types classifier → HMM: reverse direction "
+              f"{f['clf_err_reverse_by_hmm']:.0f} → {f['hmm_err_reverse_by_hmm']:.0f}, junction neighbour {f['clf_err_adjacent_by_hmm']:.0f} → "
+              f"{f['hmm_err_adjacent_by_hmm']:.0f}, other road {f['clf_err_other_by_hmm']:.0f} → {f['hmm_err_other_by_hmm']:.0f}."]
+    if d["abl"] is not None:
+        L += ["", "## Feature ablation (Δ CV Top-1 when a group is removed)"] + [
+            f"- {r.dropped_group}: {100 * r.delta_top1:+.2f} pts" for _, r in d["abl"].iloc[1:].iterrows()]
+    L += ["", "## API", "GET /health · GET /api/system/info · GET /api/model/info · GET /api/trips · GET /api/trips/{id}/metadata · "
+          "POST /api/predict/{id} · GET /api/results/{id} · GET /api/results/{id}/explain/{fix}", "",
+          "## Commands", "Laptop 1: `python -m backend.main` · Laptop 2: `cd frontend; npm run dev` with `VITE_API_URL=http://<ip>:8000` · "
+          "check: `python scripts/lan_check.py http://<ip>:8000`", "",
+          "## Key files", "labels `data/labeling.py` · candidates `features/candidate_generation.py` · features `features/feature_extraction.py` · "
+          "CV `training/cross_validation.py` · HMM `decoding/` · API `backend/` · UI `frontend/src/`"]
+    (ROOT / "reports" / "viva" / "QUICK_REVISION.md").write_text("\n".join(L) + "\n", encoding="utf-8")
+
+
 def main():
     d = load()
     best = write_markdown(d)
+    write_quick_revision(d)
     build_pdf(d, best)
 
 

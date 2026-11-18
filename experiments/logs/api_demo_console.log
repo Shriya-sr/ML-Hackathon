@@ -1,0 +1,84 @@
+11:32:59 | INFO  | pathsnap.api | starting PathSnap API on http://0.0.0.0:8000
+11:33:00 | INFO  | pathsnap.api | model loaded: hist_gradient_boosting_tuned
+11:33:00 | INFO  | pathsnap.api | mode=DEVELOPMENT partition=student_test trips=10
+11:34:15 | INFO  | pathsnap.api | 127.0.0.1 GET /health -> 200 (2 ms)
+11:34:15 | INFO  | pathsnap.api | <wifi-ip> GET /health -> 200 (1 ms)
+11:34:15 | INFO  | pathsnap.api | <wifi-ip> GET /api/system/info -> 200 (2 ms)
+11:34:15 | INFO  | pathsnap.api | <wifi-ip> GET /api/trips -> 200 (96 ms)
+11:34:17 | INFO  | pathsnap.api | trip=00000000 fixes=2503 clf_top1=0.9517 hmm_top1=0.9676 continuity=0.9851 total=2.11s
+11:34:17 | INFO  | pathsnap.api | <wifi-ip> POST /api/predict/00000000 -> 200 (2192 ms)
+11:34:18 | INFO  | pathsnap.api | trip=00000007 fixes=1354 clf_top1=0.9727 hmm_top1=0.9970 continuity=1.0000 total=0.29s
+11:34:18 | INFO  | pathsnap.api | <wifi-ip> POST /api/predict/00000007 -> 200 (336 ms)
+11:34:18 | INFO  | pathsnap.api | trip=00000009 fixes=1049 clf_top1=0.8704 hmm_top1=0.9123 continuity=0.9933 total=0.60s
+11:34:18 | INFO  | pathsnap.api | <wifi-ip> POST /api/predict/00000009 -> 200 (680 ms)
+11:34:19 | INFO  | pathsnap.api | trip=00000040 fixes=2995 clf_top1=0.9429 hmm_top1=0.9756 continuity=1.0000 total=0.74s
+11:34:19 | INFO  | pathsnap.api | <wifi-ip> POST /api/predict/00000040 -> 200 (884 ms)
+11:34:19 | INFO  | pathsnap.api | trip=00000052 fixes=262 clf_top1=0.9847 hmm_top1=0.9924 continuity=1.0000 total=0.18s
+11:34:19 | INFO  | pathsnap.api | <wifi-ip> POST /api/predict/00000052 -> 200 (202 ms)
+11:34:21 | INFO  | pathsnap.api | trip=00000056 fixes=3958 clf_top1=0.9158 hmm_top1=0.9657 continuity=0.9977 total=1.51s
+11:34:21 | INFO  | pathsnap.api | <wifi-ip> POST /api/predict/00000056 -> 200 (2028 ms)
+11:34:22 | INFO  | pathsnap.api | trip=00000065 fixes=768 clf_top1=0.9193 hmm_top1=0.9453 continuity=1.0000 total=0.33s
+11:34:22 | INFO  | pathsnap.api | <wifi-ip> POST /api/predict/00000065 -> 200 (380 ms)
+11:34:23 | INFO  | pathsnap.api | trip=00000076 fixes=1486 clf_top1=0.9253 hmm_top1=0.9670 continuity=0.9975 total=0.95s
+11:34:23 | INFO  | pathsnap.api | <wifi-ip> POST /api/predict/00000076 -> 200 (1065 ms)
+11:34:25 | INFO  | pathsnap.api | trip=00000077 fixes=3911 clf_top1=0.7832 hmm_top1=0.9095 continuity=0.9936 total=1.44s
+11:34:25 | INFO  | pathsnap.api | <wifi-ip> POST /api/predict/00000077 -> 200 (1604 ms)
+11:34:25 | INFO  | pathsnap.api | trip=00000091 fixes=874 clf_top1=0.8947 hmm_top1=0.9531 continuity=1.0000 total=0.37s
+11:34:25 | INFO  | pathsnap.api | <wifi-ip> POST /api/predict/00000091 -> 200 (425 ms)
+11:34:25 | INFO  | pathsnap.api | <wifi-ip> POST /api/predict/does-not-exist -> 404 (1 ms)
+11:34:35 | INFO  | pathsnap.api | 127.0.0.1 GET /health -> 200 (1 ms)
+11:34:35 | INFO  | pathsnap.api | 127.0.0.1 GET /health -> 200 (1 ms)
+11:34:35 | INFO  | pathsnap.api | 127.0.0.1 GET /api/system/info -> 200 (1 ms)
+11:34:35 | INFO  | pathsnap.api | 127.0.0.1 GET /api/trips -> 200 (1 ms)
+11:34:35 | INFO  | pathsnap.api | 127.0.0.1 GET /api/system/info -> 200 (1 ms)
+11:34:35 | INFO  | pathsnap.api | 127.0.0.1 GET /api/trips -> 200 (1 ms)
+11:34:35 | INFO  | pathsnap.api | 127.0.0.1 GET /api/model/info -> 200 (1 ms)
+11:34:35 | INFO  | pathsnap.api | 127.0.0.1 GET /api/model/info -> 200 (1 ms)
+11:34:40 | INFO  | pathsnap.api | trip=00000052 fixes=262 clf_top1=0.9847 hmm_top1=0.9924 continuity=1.0000 total=0.21s
+11:34:40 | INFO  | pathsnap.api | 127.0.0.1 POST /api/predict/00000052 -> 200 (246 ms)
+11:34:44 | INFO  | pathsnap.api | 127.0.0.1 GET /health -> 200 (2 ms)
+11:34:44 | INFO  | pathsnap.api | 127.0.0.1 GET /health -> 200 (1 ms)
+11:34:44 | INFO  | pathsnap.api | 127.0.0.1 GET /health -> 200 (2 ms)
+11:34:44 | INFO  | pathsnap.api | 127.0.0.1 GET /health -> 200 (1 ms)
+11:34:44 | INFO  | pathsnap.api | 127.0.0.1 GET /health -> 200 (1 ms)
+11:34:44 | INFO  | pathsnap.api | 127.0.0.1 GET /health -> 200 (1 ms)
+11:34:46 | INFO  | pathsnap.api | 127.0.0.1 GET /health -> 200 (1 ms)
+11:34:46 | INFO  | pathsnap.api | 127.0.0.1 GET /health -> 200 (2 ms)
+11:34:46 | INFO  | pathsnap.api | 127.0.0.1 GET /api/system/info -> 200 (2 ms)
+11:34:46 | INFO  | pathsnap.api | 127.0.0.1 GET /api/trips -> 200 (1 ms)
+11:34:46 | INFO  | pathsnap.api | 127.0.0.1 GET /api/system/info -> 200 (1 ms)
+11:34:46 | INFO  | pathsnap.api | 127.0.0.1 GET /api/trips -> 200 (2 ms)
+11:34:46 | INFO  | pathsnap.api | 127.0.0.1 GET /api/model/info -> 200 (2 ms)
+11:34:46 | INFO  | pathsnap.api | 127.0.0.1 GET /api/model/info -> 200 (1 ms)
+11:34:50 | INFO  | pathsnap.api | trip=00000009 fixes=1049 clf_top1=0.8704 hmm_top1=0.9123 continuity=0.9933 total=0.60s
+11:34:50 | INFO  | pathsnap.api | 127.0.0.1 POST /api/predict/00000009 -> 200 (703 ms)
+11:34:56 | INFO  | pathsnap.api | 127.0.0.1 GET /health -> 200 (1 ms)
+11:34:56 | INFO  | pathsnap.api | 127.0.0.1 GET /health -> 200 (1 ms)
+11:34:56 | INFO  | pathsnap.api | 127.0.0.1 GET /health -> 200 (1 ms)
+11:34:56 | INFO  | pathsnap.api | 127.0.0.1 GET /health -> 200 (1 ms)
+11:34:56 | INFO  | pathsnap.api | 127.0.0.1 GET /health -> 200 (1 ms)
+11:34:56 | INFO  | pathsnap.api | 127.0.0.1 GET /health -> 200 (1 ms)
+11:34:58 | INFO  | pathsnap.api | 127.0.0.1 GET /health -> 200 (2 ms)
+11:34:58 | INFO  | pathsnap.api | 127.0.0.1 GET /health -> 200 (2 ms)
+11:34:58 | INFO  | pathsnap.api | 127.0.0.1 GET /api/system/info -> 200 (1 ms)
+11:34:58 | INFO  | pathsnap.api | 127.0.0.1 GET /api/trips -> 200 (2 ms)
+11:34:58 | INFO  | pathsnap.api | 127.0.0.1 GET /api/system/info -> 200 (2 ms)
+11:34:58 | INFO  | pathsnap.api | 127.0.0.1 GET /api/trips -> 200 (1 ms)
+11:34:58 | INFO  | pathsnap.api | 127.0.0.1 GET /api/model/info -> 200 (1 ms)
+11:34:58 | INFO  | pathsnap.api | 127.0.0.1 GET /api/model/info -> 200 (1 ms)
+11:35:08 | INFO  | pathsnap.api | trip=00000077 fixes=3911 clf_top1=0.7832 hmm_top1=0.9095 continuity=0.9936 total=1.44s
+11:35:08 | INFO  | pathsnap.api | 127.0.0.1 POST /api/predict/00000077 -> 200 (1664 ms)
+11:35:14 | INFO  | pathsnap.api | 127.0.0.1 GET /health -> 200 (2 ms)
+11:35:14 | INFO  | pathsnap.api | 127.0.0.1 GET /health -> 200 (1 ms)
+11:35:14 | INFO  | pathsnap.api | 127.0.0.1 GET /health -> 200 (1 ms)
+11:35:14 | INFO  | pathsnap.api | 127.0.0.1 GET /health -> 200 (1 ms)
+11:35:15 | INFO  | pathsnap.api | 127.0.0.1 GET /health -> 200 (1 ms)
+11:35:15 | INFO  | pathsnap.api | 127.0.0.1 GET /health -> 200 (2 ms)
+11:35:17 | INFO  | pathsnap.api | 127.0.0.1 GET /health -> 200 (2 ms)
+11:35:17 | INFO  | pathsnap.api | 127.0.0.1 GET /health -> 200 (1 ms)
+11:35:17 | INFO  | pathsnap.api | 127.0.0.1 GET /api/system/info -> 200 (1 ms)
+11:35:17 | INFO  | pathsnap.api | 127.0.0.1 GET /api/trips -> 200 (1 ms)
+11:35:17 | INFO  | pathsnap.api | 127.0.0.1 GET /api/system/info -> 200 (1 ms)
+11:35:17 | INFO  | pathsnap.api | 127.0.0.1 GET /api/trips -> 200 (1 ms)
+11:35:17 | INFO  | pathsnap.api | 127.0.0.1 GET /api/model/info -> 200 (1 ms)
+11:35:17 | INFO  | pathsnap.api | 127.0.0.1 GET /api/model/info -> 200 (1 ms)

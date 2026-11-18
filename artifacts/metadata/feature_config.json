@@ -1,0 +1,18 @@
+{
+  "feature_version": "v1",
+  "candidates": {
+    "radius_m": 50.0,
+    "max_candidates": 10,
+    "fallback_radius_m": 150.0
+  },
+  "kinematics": {
+    "heading_window": 2,
+    "min_heading_disp_m": 3.0,
+    "context_window": 3,
+    "long_window": 5,
+    "min_long_disp_m": 5.0
+  },
+  "training": {
+    "obs_stride": 2
+  }
+}

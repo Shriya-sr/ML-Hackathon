@@ -24,13 +24,13 @@ Status: **PASS** (implemented and verified by the stated method) · **PARTIAL** 
 | 15 | Per-model answers A1–2, B5–6, C7–9 | DL §3.2 | `build_report.py` → `docs/model_explanations.md` | generated from records | PASS | |
 | 16 | Visualisations: CV Macro-F1, student Top-1/Macro-F1, log loss, confusion, epoch curves only where real | DL §3.3 | `make_report_figures.py` | `reports/figures/model_*.png` | PASS | |
 | 17 | Overfitting/underfitting evidence | DL §3.2 C9 | train-fold vs val-fold metrics in `run_cv` | `model_generalisation_gap.png`, per-model C9 text | PASS | |
-| 18 | Bayesian optimisation: space, objective, grouped CV, trials, best, refit, student eval, tuned vs untuned, cost | MT §7, DL §4, AP §3 | `optimisation/`, `scripts/optimise.py`, `configs/optimisation.yaml` | `experiments/optimisation/*` (SQLite study, trials.csv, summary json) | see FINAL_DELIVERABLE_AUDIT | |
+| 18 | Bayesian optimisation: space, objective, grouped CV, trials, best, refit, student eval, tuned vs untuned, cost | MT §7, DL §4, AP §3 | `optimisation/`, `scripts/optimise.py`, `configs/optimisation.yaml` | `experiments/optimisation/*` (SQLite study, trials.csv, summary json) | PASS | 40 trials, tuned vs untuned in experiments/optimisation |
 | 19 | Evaluator partition never used for selection/tuning | MT §7, DE §7, AP §7 | scripts read only train/student_test | code review + `data/README.md` | PASS | |
 | 20 | HMM: hidden states, emissions, transitions, Viterbi, missing candidates, gaps, disconnected | MT §8–9, DL §5 | `decoding/` | `tests/unit/test_decoding.py`, edge-case tests | PASS | |
 | 21 | Classifier-only vs classifier+HMM, pointwise + sequence + continuity | MT §9, DL §5 | `evaluation/decoder_eval.py`, `scripts/evaluate_all.py` | `decoder_comparison_*.csv`, `decoder_summary.json` | PASS | |
-| 22 | Decoder params tuned on train/student data only | MT §9 | `scripts/tune_hmm.py` (train OOF) | `artifacts/metadata/hmm_params.json` | see audit | |
-| 23 | Folium maps: GPS, network, reference, prediction; colours, legend, extent, layer control | DL §6, DE §8 | `visualisation/folium_maps.py`, `scripts/generate_maps.py` | `maps/html/*.html`, screenshots | see audit | |
-| 24 | Export model + preprocessing + HMM config artifacts | MG §4, MT §5 | `artifacts/models/final_classifier.joblib`, `artifacts/metadata/*.json` | `MapMatcher` loads and validates schema | see audit | |
+| 22 | Decoder params tuned on train/student data only | MT §9 | `scripts/tune_hmm.py` (train OOF) | `artifacts/metadata/hmm_params.json` | PASS | |
+| 23 | Folium maps: GPS, network, reference, prediction; colours, legend, extent, layer control | DL §6, DE §8 | `visualisation/folium_maps.py`, `scripts/generate_maps.py` | `maps/html/*.html`, screenshots | PASS | |
+| 24 | Export model + preprocessing + HMM config artifacts | MG §4, MT §5 | `artifacts/models/final_classifier.joblib`, `artifacts/metadata/*.json` | `MapMatcher` loads and validates schema | PASS | |
 | 25 | FastAPI backend processing evaluation requests | MT §5–6 | `backend/` | `backend/tests/test_api.py` | PASS | |
 | 26 | API computes accuracy from internal reference data, labels stay server-side | MT §6, AP §7 | `inference/pipeline.py::RouteEvaluator` | `test_no_ground_truth_leakage` | PASS | |
 | 27 | Works for all ten reserved trips | MT §6 | registry over `evaluator_test/` | BLOCKED: reserved trips not supplied; verified on all 10 student trips | BLOCKED | |
@@ -38,7 +38,7 @@ Status: **PASS** (implemented and verified by the stated method) · **PARTIAL** 
 | 29 | UI shows 10 trips, sends id, displays route + results | MG §3, MT §6 | `frontend/` | vitest + headless screenshots | PASS | |
 | 30 | Two-laptop deployment | MG §3 | configurable host/port/API URL; `docs/deployment.md` | TEAM: must be demonstrated on two machines | TEAM | single-machine verified |
 | 31 | No hardcoded predictions / no API bypass | MT §6, AP §7 | pipeline runs per request | code review; `test_repeated_and_concurrent_requests` | PASS | |
-| 32 | Public GitHub repo with all code, results, README, organised folders, no secrets | DL §1 | this repo, `.gitignore` | `git ls-files` review | see audit | repo visibility is the owner's setting |
-| 33 | Consolidated technical report PDF following the required structure | DL §1–7 | `scripts/build_report.py` | `reports/technical_report/PathSnap_Technical_Report.pdf` | see audit | two-laptop screenshots to be added by team |
+| 32 | Public GitHub repo with all code, results, README, organised folders, no secrets | DL §1 | this repo, `.gitignore` | `git ls-files` review | PASS | repo visibility is the owner's setting |
+| 33 | Consolidated technical report PDF following the required structure | DL §1–7 | `scripts/build_report.py` | `reports/technical_report/PathSnap_Technical_Report.pdf` | PASS | two-laptop screenshots to be added by team |
 | 34 | UI screenshots + API console screenshots from receiving laptop | DL §7 | `scripts/capture_screenshots.py` | single-machine captures | PARTIAL | two-laptop captures: TEAM |
 | 35 | Disclose AI assistance; team can explain everything | DL §8, AP §5 | README disclosure, `reports/viva/` | viva material | PASS / TEAM | understanding is the team's responsibility |

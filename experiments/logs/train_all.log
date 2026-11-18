@@ -46,3 +46,14 @@ train rows=1246339  student-test rows=131544
   [svm_rbf] fold 0: val macroF1=0.9163 top1=0.8655 logloss=0.1309 fit=3.8s
   [svm_rbf] fold 1: val macroF1=0.9511 top1=0.9235 logloss=0.0827 fit=4.4s
   [svm_rbf] fold 2: val macroF1=0.9097 top1=0.8532 logloss=0.1267 fit=5.7s
+  [svm_rbf] fold 3: val macroF1=0.9300 top1=0.8719 logloss=0.0982 fit=6.2s
+  [svm_rbf] fold 4: val macroF1=0.9149 top1=0.8806 logloss=0.1155 fit=6.0s
+  => svm_rbf: CV macroF1=0.9244±0.0167 CV top1=0.8789 | ST macroF1=0.9251 top1=0.8789 logloss=0.1073 cont=0.7488 | fit=6.9s infer=22.05s
+--- mlp: {'hidden_layer_sizes': [64, 32], 'alpha': 0.0001, 'learning_rate_init': 0.001, 'max_iter': 200, 'early_stopping': True, 'validation_fraction': 0.1, 'n_iter_no_change': 10, 'batch_size': 512} {}
+  [mlp] fold 0: val macroF1=0.9220 top1=0.8762 logloss=0.1146 fit=66.4s
+  [mlp] fold 1: val macroF1=0.9516 top1=0.9240 logloss=0.0704 fit=55.4s
+  [mlp] fold 2: val macroF1=0.9212 top1=0.8657 logloss=0.1096 fit=82.5s
+  [mlp] fold 3: val macroF1=0.9369 top1=0.8779 logloss=0.0823 fit=71.2s
+  [mlp] fold 4: val macroF1=0.9163 top1=0.8740 logloss=0.1029 fit=88.9s
+  => mlp: CV macroF1=0.9296±0.0145 CV top1=0.8836 | ST macroF1=0.9295 top1=0.8868 logloss=0.0878 cont=0.7668 | fit=114.4s infer=0.10s
+=== done

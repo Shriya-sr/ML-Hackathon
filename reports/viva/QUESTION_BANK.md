@@ -65,7 +65,7 @@ so quote them from there. ★ = harder question.
 52. ★ **Why can Macro-F1 and Top-1 disagree?** Macro-F1 depends on the 0.5 threshold over all rows. Top-1 only depends on the *ranking* within each fix.
 53. **What was your primary selection metric and why?** CV Macro-F1 (as the brief requires), read together with CV Top-1, log loss (HMM emissions need good probabilities), fold stability and cost.
 54. **Which model did you select?** HistGradientBoosting (see QUICK_REVISION for numbers).
-55. ★ **RF and HGB are within noise. Why HGB?** The difference is far below the fold std. HGB optimises log loss directly, trains ~15× faster (making Bayesian search feasible), has a smaller artifact and faster inference.
+55. ★ **RF and HGB are within noise. Why HGB?** The difference is far below the fold std. HGB optimises log loss directly, trains ~20× faster (making Bayesian search feasible), has a smaller artifact and faster inference.
 56. **How does SVM give probabilities?** Platt scaling: a sigmoid fitted on cross-validated decision values (`CalibratedClassifierCV`, sigmoid, cv=3).
 57. **Why subsample for SVM and KNN?** Kernel SVM training is O(n²)–O(n³). KNN prediction cost grows with stored rows. Subsampling is trip-stratified and documented.
 58. **How does Gaussian NB fail here?** It assumes independent Gaussian features. Ours are strongly correlated and skewed (e.g. distance ratios), so its probabilities are overconfident (worst log loss).

@@ -1,0 +1,8 @@
+* text=auto
+*.pdf binary
+*.png binary
+*.jpg binary
+*.joblib binary
+*.db binary
+*.pkl binary
+*.npy binary

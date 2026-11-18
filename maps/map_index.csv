@@ -1,0 +1,7 @@
+map,partition,trip_id,content,clf_top1,hmm_top1
+eda_train_00000001_raw.html,train,00000001,raw GPS + network + reference,,
+eda_train_00000054_raw.html,train,00000054,raw GPS + network + reference,,
+student_00000052_comparison.html,student_test,00000052,GPS + network + reference + classifier-only + HMM,0.9847328244274809,0.9923664122137404
+student_00000009_comparison.html,student_test,00000009,GPS + network + reference + classifier-only + HMM,0.8703527168732126,0.9122974261201144
+student_00000077_comparison.html,student_test,00000077,GPS + network + reference + classifier-only + HMM,0.7831756583993863,0.9094860649450268
+student_00000065_comparison.html,student_test,00000065,GPS + network + reference + classifier-only + HMM,0.9192708333333334,0.9453125
