@@ -1,0 +1,24 @@
+# Core scientific stack
+numpy==2.2.1
+pandas==2.3.2
+scipy==1.16.1
+scikit-learn==1.7.2
+joblib==1.5.2
+pyyaml==6.0.2
+
+# Geography
+shapely==2.1.2
+pyproj==3.7.2
+
+# Optimisation
+optuna==4.1.0
+
+# Visualisation
+matplotlib==3.10.6
+seaborn==0.13.2
+folium==0.18.0
+
+# API
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+pydantic==2.12.5

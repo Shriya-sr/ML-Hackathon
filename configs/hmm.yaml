@@ -1,0 +1,25 @@
+# HMM / Viterbi decoder parameters.
+# Tuned by scripts/tune_hmm.py on out-of-fold classifier probabilities of the
+# 80 training trips (never on evaluator data). Values below are overwritten in
+# artifacts/metadata/hmm_params.json after tuning; this file holds the defaults
+# and the search grid.
+defaults:
+  w_clf: 1.0            # weight of log P_classifier(candidate) in the emission
+  sigma_m: 10.0         # GPS noise std for the Gaussian distance term
+  w_dist: 0.0           # weight of the distance term (0 = classifier probability only)
+  beta_m: 5.0           # scale of the exponential |route_dist - gps_dist| transition model
+  uturn_penalty: 2.0    # extra -log cost for jumping onto the reverse arc
+  vmax_mps: 55.0        # transitions implying higher speed are impossible
+  max_gap_s: 120.0      # dt above this breaks the chain (decode segments independently)
+  max_states: 8         # keep the top-N candidates per fix by emission score
+  min_limit_m: 150.0    # minimum network search radius for a transition
+  limit_factor: 2.5     # search radius = max(min_limit, limit_factor * gps_dist + 100)
+  max_limit_m: 4000.0
+  prob_floor: 1.0e-6
+
+grid:
+  w_clf: [0.5, 1.0, 2.0]
+  beta_m: [2.0, 5.0, 10.0, 25.0]
+  w_dist: [0.0, 1.0]
+  uturn_penalty: [0.0, 2.0, 5.0]
+tuning_trips: 30        # random subset of training trips used for the grid search

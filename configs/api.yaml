@@ -1,0 +1,10 @@
+# FastAPI backend (Laptop 1). Every value can be overridden by an environment variable.
+host: 0.0.0.0                       # PATHSNAP_HOST  - 0.0.0.0 = reachable from other machines on the LAN
+port: 8000                          # PATHSNAP_PORT
+evaluation_partition: evaluator_test  # PATHSNAP_EVAL_PARTITION - folder under PATHSNAP_DATA_DIR
+fallback_partition: student_test    # used (and clearly flagged as DEVELOPMENT mode) while evaluator_test is empty
+cors_origins: ["*"]                 # PATHSNAP_CORS_ORIGINS (comma-separated). No cookies/credentials are used.
+prediction_timeout_s: 120           # PATHSNAP_PREDICT_TIMEOUT
+result_cache_size: 20
+low_confidence_threshold: 0.5
+max_network_arcs: 12000             # cap on road-network segments sent to the UI for drawing

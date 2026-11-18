@@ -1,0 +1,48 @@
+=== train_all  models=['logistic_regression', 'gaussian_nb', 'knn', 'random_forest', 'extra_trees', 'hist_gradient_boosting', 'svm_rbf', 'mlp']  features=v1 (21)  stride=2
+train rows=1246339  student-test rows=131544
+--- logistic_regression: {'C': 1.0, 'max_iter': 3000, 'class_weight': None} {}
+  [logistic_regression] fold 0: val macroF1=0.9143 top1=0.8660 logloss=0.1290 fit=1.8s
+  [logistic_regression] fold 1: val macroF1=0.9498 top1=0.9256 logloss=0.0900 fit=1.3s
+  [logistic_regression] fold 2: val macroF1=0.9116 top1=0.8588 logloss=0.1220 fit=1.9s
+  [logistic_regression] fold 3: val macroF1=0.9347 top1=0.8781 logloss=0.0910 fit=1.6s
+  [logistic_regression] fold 4: val macroF1=0.9205 top1=0.8814 logloss=0.1111 fit=1.4s
+  => logistic_regression: CV macroF1=0.9262±0.0159 CV top1=0.8820 | ST macroF1=0.9256 top1=0.8834 logloss=0.1019 cont=0.7562 | fit=2.0s infer=0.02s
+--- gaussian_nb: {'var_smoothing': 1e-09} {}
+  [gaussian_nb] fold 0: val macroF1=0.8916 top1=0.8414 logloss=0.4876 fit=0.2s
+  [gaussian_nb] fold 1: val macroF1=0.9150 top1=0.9070 logloss=0.3937 fit=0.1s
+  [gaussian_nb] fold 2: val macroF1=0.8872 top1=0.8361 logloss=0.4758 fit=0.2s
+  [gaussian_nb] fold 3: val macroF1=0.9097 top1=0.8548 logloss=0.3582 fit=0.2s
+  [gaussian_nb] fold 4: val macroF1=0.9032 top1=0.8586 logloss=0.3499 fit=0.2s
+  => gaussian_nb: CV macroF1=0.9013±0.0118 CV top1=0.8596 | ST macroF1=0.8966 top1=0.8593 logloss=0.4316 cont=0.7176 | fit=0.2s infer=0.07s
+--- knn: {'n_neighbors': 25, 'weights': 'distance'} {'max_train_rows': 60000}
+  [knn] fold 0: val macroF1=0.9124 top1=0.8600 logloss=0.1853 fit=0.0s
+  [knn] fold 1: val macroF1=0.9485 top1=0.9187 logloss=0.1265 fit=0.0s
+  [knn] fold 2: val macroF1=0.9080 top1=0.8440 logloss=0.1595 fit=0.0s
+  [knn] fold 3: val macroF1=0.9293 top1=0.8663 logloss=0.1324 fit=0.0s
+  [knn] fold 4: val macroF1=0.9135 top1=0.8667 logloss=0.1589 fit=0.0s
+  => knn: CV macroF1=0.9223±0.0167 CV top1=0.8711 | ST macroF1=0.9241 top1=0.8809 logloss=0.1344 cont=0.7371 | fit=0.0s infer=6.03s
+--- random_forest: {'n_estimators': 200, 'max_depth': None, 'min_samples_leaf': 5, 'max_features': 'sqrt', 'n_jobs': -1} {}
+  [random_forest] fold 0: val macroF1=0.9221 top1=0.8694 logloss=0.1030 fit=51.3s
+  [random_forest] fold 1: val macroF1=0.9551 top1=0.9271 logloss=0.0647 fit=43.6s
+  [random_forest] fold 2: val macroF1=0.9258 top1=0.8663 logloss=0.0988 fit=52.3s
+  [random_forest] fold 3: val macroF1=0.9420 top1=0.8770 logloss=0.0707 fit=51.5s
+  [random_forest] fold 4: val macroF1=0.9232 top1=0.8804 logloss=0.0940 fit=55.7s
+  => random_forest: CV macroF1=0.9336±0.0144 CV top1=0.8840 | ST macroF1=0.9344 top1=0.8942 logloss=0.0784 cont=0.7713 | fit=66.1s infer=0.42s
+--- extra_trees: {'n_estimators': 200, 'max_depth': None, 'min_samples_leaf': 5, 'max_features': 'sqrt', 'n_jobs': -1} {}
+  [extra_trees] fold 0: val macroF1=0.9208 top1=0.8659 logloss=0.1036 fit=19.5s
+  [extra_trees] fold 1: val macroF1=0.9540 top1=0.9228 logloss=0.0684 fit=16.4s
+  [extra_trees] fold 2: val macroF1=0.9212 top1=0.8603 logloss=0.0997 fit=17.1s
+  [extra_trees] fold 3: val macroF1=0.9396 top1=0.8739 logloss=0.0745 fit=18.8s
+  [extra_trees] fold 4: val macroF1=0.9225 top1=0.8778 logloss=0.0963 fit=20.1s
+  => extra_trees: CV macroF1=0.9316±0.0148 CV top1=0.8802 | ST macroF1=0.9314 top1=0.8872 logloss=0.0836 cont=0.7502 | fit=25.7s infer=0.51s
+--- hist_gradient_boosting: {'learning_rate': 0.1, 'max_iter': 300, 'max_leaf_nodes': 31, 'min_samples_leaf': 20, 'l2_regularization': 0.0, 'early_stopping': True, 'validation_fraction': 0.1, 'n_iter_no_change': 15} {}
+  [hist_gradient_boosting] fold 0: val macroF1=0.9215 top1=0.8693 logloss=0.1060 fit=2.4s
+  [hist_gradient_boosting] fold 1: val macroF1=0.9530 top1=0.9244 logloss=0.0736 fit=2.9s
+  [hist_gradient_boosting] fold 2: val macroF1=0.9250 top1=0.8663 logloss=0.1005 fit=3.1s
+  [hist_gradient_boosting] fold 3: val macroF1=0.9423 top1=0.8769 logloss=0.0723 fit=2.9s
+  [hist_gradient_boosting] fold 4: val macroF1=0.9241 top1=0.8829 logloss=0.0959 fit=3.0s
+  => hist_gradient_boosting: CV macroF1=0.9332±0.0138 CV top1=0.8840 | ST macroF1=0.9347 top1=0.8950 logloss=0.0828 cont=0.7701 | fit=3.2s infer=0.20s
+--- svm_rbf: {'C': 1.0, 'gamma': 'scale'} {'calibration': 'sigmoid', 'max_train_rows': 20000}
+  [svm_rbf] fold 0: val macroF1=0.9163 top1=0.8655 logloss=0.1309 fit=3.8s
+  [svm_rbf] fold 1: val macroF1=0.9511 top1=0.9235 logloss=0.0827 fit=4.4s
+  [svm_rbf] fold 2: val macroF1=0.9097 top1=0.8532 logloss=0.1267 fit=5.7s

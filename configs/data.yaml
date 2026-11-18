@@ -1,0 +1,17 @@
+# Dataset layout and preprocessing settings
+partitions:
+  train: train
+  student_test: student_test
+  evaluator_test: evaluator_test   # empty until organisers supply the reserved trips
+
+preprocessing:
+  drop_invalid_coordinates: true     # NaN / out-of-range lon-lat rows are removed
+  sort_by_timestamp: true            # out-of-order rows are re-sorted (never silently dropped)
+  drop_duplicate_timestamps: true    # keep the first fix for a repeated timestamp
+  gap_threshold_s: 30                # dt above this is flagged as a GPS gap (EDA + HMM chain break)
+
+labelling:
+  # Per-observation labels are derived by a monotone alignment of the GPS
+  # points onto the ordered reference route (see pathsnap/data/labeling.py).
+  distance_cap_m: 100.0              # robust cost cap used inside the alignment DP
+  max_label_distance_m: 60.0         # aligned arc farther than this -> label = -1 (unreliable)

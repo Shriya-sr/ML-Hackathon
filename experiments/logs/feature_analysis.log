@@ -1,0 +1,11 @@
+permutation importance fold 0 done
+permutation importance fold 1 done
+permutation importance fold 2 done
+permutation importance fold 3 done
+permutation importance fold 4 done
+{'dropped_group': '(none - full set)', 'n_features': 21, 'cv_macro_f1': np.float64(0.933426338046919), 'cv_macro_f1_std': np.float64(0.013806706762333469), 'cv_top1': np.float64(0.8852979648247306), 'cv_log_loss': np.float64(0.08843378786202519)}
+{'dropped_group': 'geometric', 'n_features': 12, 'cv_macro_f1': np.float64(0.8802742390302459), 'cv_macro_f1_std': np.float64(0.009658930024361781), 'cv_top1': np.float64(0.8447546803608172), 'cv_log_loss': np.float64(0.1503093752539753)}
+{'dropped_group': 'heading', 'n_features': 17, 'cv_macro_f1': np.float64(0.7278149557593493), 'cv_macro_f1_std': np.float64(0.045084031546758024), 'cv_top1': np.float64(0.5529970219151716), 'cv_log_loss': np.float64(0.22864409422220944)}
+{'dropped_group': 'context', 'n_features': 19, 'cv_macro_f1': np.float64(0.9301667961443225), 'cv_macro_f1_std': np.float64(0.016104384452897098), 'cv_top1': np.float64(0.8794455261982028), 'cv_log_loss': np.float64(0.09325503441334758)}
+{'dropped_group': 'kinematic', 'n_features': 18, 'cv_macro_f1': np.float64(0.932658077513025), 'cv_macro_f1_std': np.float64(0.012968463487719628), 'cv_top1': np.float64(0.8832523933663612), 'cv_log_loss': np.float64(0.09009959324547247)}
+{'dropped_group': 'network', 'n_features': 18, 'cv_macro_f1': np.float64(0.9303932741422127), 'cv_macro_f1_std': np.float64(0.014626990154209324), 'cv_top1': np.float64(0.8841330830741845), 'cv_log_loss': np.float64(0.09124071376520732)}

@@ -1,0 +1,8 @@
+# Bayesian hyperparameter optimisation (Optuna TPE)
+model: hist_gradient_boosting     # chosen from the baseline comparison (see reports / experiments/results/model_summary.csv)
+objective: cv_macro_f1            # mean Macro-F1 over the same 5 trip-grouped folds used for the baseline
+n_trials: 40
+seed: 42
+search_obs_stride: 4              # every 4th fix during the search (speed); the winner is re-scored with stride 2
+pruner: median                    # MedianPruner on per-fold intermediate values
+storage: experiments/optimisation/optuna_study.db
