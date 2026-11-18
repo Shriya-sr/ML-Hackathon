@@ -69,7 +69,7 @@ Results:
 | Step | Result |
 |---|---|
 | install from requirements | PASS |
-| pytest | commit 88fe2b9: 80 passed, 12 skipped (API/integration tests hard-coded `data/raw`). Fixed to honour `PATHSNAP_DATA_DIR`; after `git pull` of commit d3a6561 the clean clone gives **92 passed, 0 skipped** |
+| pytest | commit efefb9b: 80 passed, 12 skipped (API/integration tests hard-coded `data/raw`). Fixed to honour `PATHSNAP_DATA_DIR`; after `git pull` of commit 02de310 the clean clone gives **92 passed, 0 skipped** |
 | feature rebuild | identical to the original run: train 1 246 339 rows, 184 089 positives, miss rate 0.0114; student-test 131 544 rows, miss rate 0.0015 |
 | retraining (LR, HGB) | **identical** to the recorded results: LR CV Macro-F1 0.9262 ± 0.0159, CV Top-1 0.8820, student Top-1 0.8834, log loss 0.1019; HGB CV Macro-F1 0.9332 ± 0.0138, CV Top-1 0.8840, student Top-1 0.8950, log loss 0.0828 (only wall-clock timings differ) |
 | frontend `npm ci`, `tsc -b`, `vitest`, `vite build` | PASS (12 tests) |
