@@ -45,7 +45,7 @@ python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements-dev.txt
 pip install -e .
-cd frontend; npm ci; cd ..
+cd frontend; npm.cmd ci; cd ..
 ```
 
 Dataset: copy the course data into `data/raw/` (see [`data/README.md`](data/README.md)) or set
@@ -89,7 +89,7 @@ python -m backend.main                          # http://0.0.0.0:8000, docs at /
 ```powershell
 cd frontend
 "VITE_API_URL=http://<LAPTOP-1-IP>:8000" | Out-File -Encoding ascii .env.local
-npm run dev                                     # open http://localhost:5173
+npm.cmd run dev                                     # open http://localhost:5173
 ```
 
 Full two-laptop procedure (IP lookup, firewall rule, connectivity checks, demo script, failure handling):

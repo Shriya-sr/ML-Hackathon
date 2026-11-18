@@ -28,7 +28,7 @@ Command sheets:
 
 1. Install **Node.js 18 or newer** (https://nodejs.org, LTS installer) if it is not installed. Check with `node --version`.
 2. Unzip `PathSnap_Laptop2_Frontend.zip` and follow `LAPTOP2_FRONTEND_COMMANDS.md`, sections 1–3.
-   `npm ci` needs internet **once**. If there is no internet on the day, use the no-Node fallback in section 5.
+   `npm.cmd ci` needs internet **once**. If there is no internet on the day, use the no-Node fallback in section 5.
 3. Rehearse with Sujal (Phase B).
 4. Learn the UI so you can drive it confidently: trip list, layer toggles, **Snap to road**, **Replay trip**,
    clicking a GPS fix ("Why this road?"), the metrics panel and the Change button for the API address.
@@ -101,6 +101,6 @@ Then Sujal rebuilds the report and commits (Laptop 1 section 6).
 | UI says **API offline** | Same Wi-Fi? Correct IP in the UI (Change button)? Backend window still running? Firewall rule added? Try the phone hotspot |
 | `Test-NetConnection` fails | Firewall rule (Laptop 1 section 2), or the Wi-Fi is set to *Public*: Settings → Network → Wi-Fi → *Private network* |
 | Map background is blank/grey | No internet for map tiles. Everything else still works; untick **Basemap** |
-| `npm ci` fails on Laptop 2 (no internet) | Use the no-Node fallback (Laptop 2 section 5) |
+| `npm.cmd ci` fails on Laptop 2 (no internet) | Use the no-Node fallback (Laptop 2 section 5) |
 | Laptop 2 dies | Run the UI on Laptop 1 too (Laptop 1 section 7) and explain the fallback |
 | A trip is slow | The largest trips take 2–3 s; wait for the spinner |

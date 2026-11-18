@@ -3,7 +3,7 @@
 | Laptop | Runs | Holds |
 |---|---|---|
 | **Laptop 1 – Model & API** | `python -m backend.main` (FastAPI + Uvicorn on `0.0.0.0:8000`) | trained classifier, HMM parameters, road networks, evaluator trips + reference routes (server-side scoring) |
-| **Laptop 2 – UI** | `npm run dev` (Vite dev server, React UI) | nothing sensitive: it only receives predictions and aggregate metrics |
+| **Laptop 2 – UI** | `npm.cmd run dev` (Vite dev server, React UI) | nothing sensitive: it only receives predictions and aggregate metrics |
 
 Both laptops must be on the **same network** (same Wi-Fi or a phone hotspot; guest/isolated Wi-Fi
 networks often block device-to-device traffic). The map basemap tiles come from OpenStreetMap and need
@@ -37,7 +37,7 @@ the repository, so Laptop 1 does **not** need to retrain.
 
 ```powershell
 cd frontend
-npm ci
+npm.cmd ci
 ```
 
 ## 1. Find Laptop 1's IP address
@@ -98,7 +98,7 @@ Or open `http://192.168.1.23:8000/docs` in Laptop 2's browser (interactive API d
 ```powershell
 cd frontend
 "VITE_API_URL=http://192.168.1.23:8000" | Out-File -Encoding ascii .env.local
-npm run dev
+npm.cmd run dev
 ```
 
 Open `http://localhost:5173`. The API address can also be changed at runtime with **Change** in the top bar.
@@ -144,5 +144,5 @@ Docker is optional. The plain Python start above is the recommended demo path.
 
 ```powershell
 python -m backend.main            # terminal 1
-cd frontend; npm run dev           # terminal 2  -> http://localhost:5173
+cd frontend; npm.cmd run dev           # terminal 2  -> http://localhost:5173
 ```

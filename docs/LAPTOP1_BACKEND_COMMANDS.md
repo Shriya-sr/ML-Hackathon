@@ -109,7 +109,7 @@ Only if Laptop 2 fails. Open a second PowerShell window:
 
 ```powershell
 cd "D:\ML hackathon\PATHSNAP\frontend"
-npm run dev
+npm.cmd run dev
 ```
 
 Then open `http://localhost:5173` in a browser on Laptop 1.

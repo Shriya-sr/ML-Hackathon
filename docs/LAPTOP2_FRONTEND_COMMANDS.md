@@ -18,6 +18,10 @@ PathSnap_Laptop2_Frontend/
 
 Run everything in **Windows PowerShell**.
 
+> **Always type `npm.cmd`, not `npm`.** On many Windows laptops PowerShell blocks `npm` with
+> *"running scripts is disabled on this system"*. `npm.cmd` is the same npm and is not affected.
+> (Or run the commands from **Command Prompt** (`cmd`), where plain `npm` also works.)
+
 ---
 
 ## 0. Requirements (once)
@@ -26,19 +30,19 @@ Run everything in **Windows PowerShell**.
 
   ```powershell
   node --version
-  npm --version
+  npm.cmd --version
   ```
 
   If not installed: download the **LTS** installer from https://nodejs.org, install with defaults, then **open a
   new PowerShell window**.
-* Internet access **once** for `npm ci` (downloads ~190 packages).
+* Internet access **once** for `npm.cmd ci` (downloads ~190 packages).
 
 ## 1. Unzip and install (once, ~1 min)
 
 ```powershell
 Expand-Archive -Path "$HOME\Downloads\PathSnap_Laptop2_Frontend.zip" -DestinationPath "C:\PathSnap_UI" -Force
 cd "C:\PathSnap_UI\PathSnap_Laptop2_Frontend\frontend"
-npm ci
+npm.cmd ci
 ```
 
 (Adjust the first path if the zip is somewhere other than *Downloads*.) Expected: `added 190 packages`.
@@ -74,7 +78,7 @@ Expected last line: `ALL CHECKS PASSED`.
 ```powershell
 cd "C:\PathSnap_UI\PathSnap_Laptop2_Frontend\frontend"
 Set-Content -Encoding ascii .env.local "VITE_API_URL=http://192.168.1.23:8000"
-npm run dev
+npm.cmd run dev
 ```
 
 Expected: `Local: http://localhost:5173/`. Open **http://localhost:5173** in Chrome or Edge.
@@ -100,7 +104,7 @@ Stop the UI with **Ctrl + C** in the PowerShell window.
    reaches this laptop.
 5. Screenshot for the report: **Win + Shift + S**, save as `ui_trip_<tripid>.png` and send it to the Laptop 1 operator.
 
-## 5. Fallback if `npm ci` is impossible (no internet / no Node.js)
+## 5. Fallback if `npm.cmd ci` is impossible (no internet / no Node.js)
 
 The zip contains a pre-built UI in `frontend\dist`. Serve it with Python:
 
@@ -120,6 +124,7 @@ IP) and press **Connect**. The address is remembered in this browser.
 | `TcpTestSucceeded : False` | Backend not running on Laptop 1, wrong IP, laptops on different networks, or Laptop 1's firewall rule missing. College Wi-Fi often isolates devices; use a phone hotspot for both laptops |
 | UI shows **API offline** | Same checks as above, then **Retry connection**; verify the URL in the top bar (Change) |
 | `npm` not recognised | Install Node.js LTS and open a **new** PowerShell window |
-| `npm ci` errors | Check internet; delete the `node_modules` folder and run `npm ci` again; or use section 5 |
+| *running scripts is disabled on this system* | You typed `npm`: use `npm.cmd` (or use Command Prompt) |
+| `npm.cmd ci` errors | Check internet; delete the `node_modules` folder and run `npm.cmd ci` again; or use section 5 |
 | Grey map background | No internet for map tiles; untick **Basemap**. Routes and roads still display |
-| Port 5173 busy | `npm run dev -- --port 5174`, then open http://localhost:5174 |
+| Port 5173 busy | `npm.cmd run dev -- --port 5174`, then open http://localhost:5174 |
