@@ -93,7 +93,8 @@ npm run dev                                     # open http://localhost:5173
 ```
 
 Full two-laptop procedure (IP lookup, firewall rule, connectivity checks, demo script, failure handling):
-[`docs/deployment.md`](docs/deployment.md).
+[`docs/deployment.md`](docs/deployment.md). Command sheets: [`docs/LAPTOP1_BACKEND_COMMANDS.md`](docs/LAPTOP1_BACKEND_COMMANDS.md),
+[`docs/LAPTOP2_FRONTEND_COMMANDS.md`](docs/LAPTOP2_FRONTEND_COMMANDS.md). Per-member plan: [`docs/TEAM_ACTION_PLAN.md`](docs/TEAM_ACTION_PLAN.md).
 
 ### API
 
