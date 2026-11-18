@@ -36,3 +36,32 @@
 | Edit similarity | 0.6654 | 0.8771 | 0.9420 |
 | Invalid transitions (sum) | 1108 | 343 | 12 |
 | Candidate miss rate | 0.0015 | 0.0015 | |
+
+## Held-out evaluator trips (frozen pipeline, scored once after all modelling decisions)
+
+Source: `experiments/results/heldout_evaluator_summary.json` (`scripts/evaluate_heldout.py`). The 10 trips share no trip ID or track file with train/student-test and were never used for training, tuning or selection.
+
+| Metric | Student-test: classifier | Student-test: + HMM | Evaluator: classifier | Evaluator: + HMM |
+|---|---|---|---|---|
+| Top-1 accuracy (pooled fixes) | 0.9000 | 0.9544 | 0.9080 | 0.9590 |
+| Selection Macro-F1 (mean) | 0.9517 | 0.9765 | 0.9577 | 0.9734 |
+| Route continuity (mean, + recon.) | 0.7820 | 0.9967 | 0.7889 | 0.9937 |
+| Route F1 (mean, + recon.) | 0.9491 | 0.9889 | 0.9261 | 0.9867 |
+| Edit similarity (mean, + recon.) | 0.6654 | 0.9420 | 0.6886 | 0.9094 |
+| Invalid transitions (total) | 1108 | 12 | 1070 | 12 |
+| Candidate miss rate | 0.0015 | | 0.0023 | |
+
+Classifier on evaluator candidates: Macro-F1 (threshold 0.5) 0.9422, log loss 0.0766, ROC-AUC 0.9926. The HMM fixed 1145 fixes and broke 142.
+
+| Trip | fixes | miss rate | clf Top-1 | HMM Top-1 | clf contin. | recon contin. | recon route F1 |
+|---|---|---|---|---|---|---|---|
+| 00000015 | 6854 | 0.0015 | 0.8383 | 0.9546 | 0.749 | 0.973 | 0.952 |
+| 00000017 | 1346 | 0.0149 | 0.9146 | 0.9257 | 0.686 | 0.998 | 0.982 |
+| 00000023 | 458 | 0.0044 | 0.9410 | 0.9541 | 0.823 | 0.987 | 0.992 |
+| 00000030 | 654 | 0.0138 | 0.8150 | 0.8853 | 0.645 | 0.997 | 0.974 |
+| 00000049 | 2642 | 0.0000 | 0.9871 | 0.9921 | 0.909 | 1.000 | 0.999 |
+| 00000059 | 1031 | 0.0029 | 0.9253 | 0.9389 | 0.739 | 0.998 | 0.994 |
+| 00000067 | 916 | 0.0000 | 0.9727 | 0.9421 | 0.811 | 0.987 | 0.986 |
+| 00000073 | 1144 | 0.0009 | 0.9729 | 0.9790 | 0.905 | 0.996 | 0.999 |
+| 00000087 | 1399 | 0.0000 | 0.9492 | 0.9907 | 0.836 | 1.000 | 0.998 |
+| 00000094 | 3230 | 0.0003 | 0.9378 | 0.9610 | 0.786 | 1.000 | 0.990 |

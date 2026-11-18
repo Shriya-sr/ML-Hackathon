@@ -50,7 +50,7 @@ Verification date: 2026-11-18, Windows 11, Python 3.12.6, Node 22.19.
 | Bayesian search, grouped CV, trials recorded, refit, student eval, cost | PASS | `optimisation_summary.json` (40 trials: 18 complete, 22 pruned; 22 min) |
 | Evaluator data not used for tuning/selection | PASS | `reports/final/DATA_LEAKAGE_AUDIT.md` |
 | HMM requirements + decoder tuned on train/student only | PASS | `tune_hmm.py` (train OOF), `hmm_params.json` |
-| System works for all ten reserved trips | BLOCKED BY MISSING INPUT | evaluator trips not supplied; verified on all 10 student-test trips via the API (`experiments/logs/lan_check_wifi_interface.log`) |
+| System works for all ten reserved trips | PASS | held-out evaluator trips scored once with the frozen pipeline (`scripts/evaluate_heldout.py`): Top-1 0.9080 → 0.9590; all 10 served in EVALUATION mode via the API (`experiments/logs/lan_check_evaluator_trips.log`) |
 | API on Laptop 1 + UI on Laptop 2, logs shown | TEAM ACTION | single-machine run verified, including a request through the Wi-Fi interface; procedure in `docs/deployment.md` |
 
 ## Academic integrity

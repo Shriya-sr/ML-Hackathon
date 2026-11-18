@@ -90,7 +90,8 @@ def load():
     d = {"summary": s}
     for k, p in {"opt": OPT / "optimisation_summary.json", "dec": RES / "decoder_summary.json",
                  "dec_pre": RES / "decoder_summary_preliminary.json", "hmm": ROOT / "artifacts" / "metadata" / "hmm_params.json",
-                 "clf": ROOT / "artifacts" / "metadata" / "classifier.json"}.items():
+                 "clf": ROOT / "artifacts" / "metadata" / "classifier.json",
+                 "ho": RES / "heldout_evaluator_summary.json"}.items():
         d[k] = json.loads(p.read_text()) if p.exists() else None
     for k, p in {"tvu": OPT / "tuned_vs_untuned.csv"}.items():
         d[k] = pd.read_csv(p, index_col=0) if p.exists() else None
@@ -98,7 +99,7 @@ def load():
                  "perm": RES / "permutation_importance.csv", "trials": OPT / "trials.csv",
                  "inv": EDA / "dataset_inventory.csv", "val": EDA / "data_validation_full.csv",
                  "traj": EDA / "trajectory_statistics.csv", "sweep": EDA / "candidate_radius_sweep_train.csv",
-                 "grid": RES / "hmm_grid.csv"}.items():
+                 "grid": RES / "hmm_grid.csv", "ho_trips": RES / "heldout_evaluator_comparison.csv"}.items():
         d[k] = pd.read_csv(p, dtype={"trip_id": str}) if p.exists() else None
     return d
 
@@ -203,6 +204,7 @@ def write_markdown(d):
                 f"| Edit similarity | {f['clf_edit_similarity']:.4f} | {f['hmm_edit_similarity']:.4f} | {f['recon_edit_similarity']:.4f} |",
                 f"| Invalid transitions (sum) | {f['clf_invalid_transitions']:.0f} | {f['hmm_invalid_transitions']:.0f} | {f['recon_invalid_transitions']:.0f} |",
                 f"| Candidate miss rate | {f['miss_rate']:.4f} | {f['miss_rate']:.4f} | |"]
+    res += heldout_markdown(d)
     (ROOT / "reports" / "final").mkdir(parents=True, exist_ok=True)
     (ROOT / "reports" / "final" / "RESULTS_SUMMARY.md").write_text("\n".join(res) + "\n", encoding="utf-8")
     return best
@@ -246,6 +248,80 @@ def table(rows, col_widths=None):
     return t
 
 
+METRIC_ROWS = [("Top-1 accuracy (pooled fixes)", "clf_top1", "hmm_top1"),
+               ("Selection Macro-F1 (mean)", "clf_sel_macro_f1", "hmm_sel_macro_f1"),
+               ("Route continuity (mean, + recon.)", "clf_route_continuity", "recon_route_continuity"),
+               ("Route F1 (mean, + recon.)", "clf_route_f1", "recon_route_f1"),
+               ("Edit similarity (mean, + recon.)", "clf_edit_similarity", "recon_edit_similarity"),
+               ("Invalid transitions (total)", "clf_invalid_transitions", "recon_invalid_transitions")]
+
+
+def _fmt(key, v):
+    return f"{v:.0f}" if "invalid" in key else f"{v:.4f}"
+
+
+def heldout_markdown(d) -> list[str]:
+    if not d["ho"]:
+        return []
+    h, ht = d["ho"]["summary"], d["ho_trips"]
+    f = d["dec"]["summary"]["final"] if d["dec"] else None
+    out = ["", "## Held-out evaluator trips (frozen pipeline, scored once after all modelling decisions)", "",
+           f"Source: `experiments/results/heldout_evaluator_summary.json` (`scripts/evaluate_heldout.py`). The {h['n_trips']} trips share "
+           "no trip ID or track file with train/student-test and were never used for training, tuning or selection.", "",
+           "| Metric | Student-test: classifier | Student-test: + HMM | Evaluator: classifier | Evaluator: + HMM |", "|---|---|---|---|---|"]
+    for name, a, b in METRIC_ROWS:
+        out.append(f"| {name} | {_fmt(a, f[a]) if f else ''} | {_fmt(b, f[b]) if f else ''} | {_fmt(a, h[a])} | {_fmt(b, h[b])} |")
+    out += [f"| Candidate miss rate | {f['miss_rate']:.4f} | | {h['miss_rate']:.4f} | |" if f else
+            f"| Candidate miss rate | | | {h['miss_rate']:.4f} | |",
+            "", f"Classifier on evaluator candidates: Macro-F1 (threshold 0.5) {h['clf_macro_f1_threshold_0_5']:.4f}, log loss "
+            f"{h['clf_log_loss']:.4f}, ROC-AUC {h['clf_roc_auc']:.4f}. The HMM fixed {h['n_fixed_by_hmm']:.0f} fixes and broke "
+            f"{h['n_broken_by_hmm']:.0f}.", "", "| Trip | fixes | miss rate | clf Top-1 | HMM Top-1 | clf contin. | recon contin. | recon route F1 |",
+            "|---|---|---|---|---|---|---|---|"]
+    for _, r in ht.iterrows():
+        out.append(f"| {r.trip_id} | {int(r.n_fixes)} | {r.miss_rate:.4f} | {r.clf_top1:.4f} | {r.hmm_top1:.4f} | "
+                   f"{r.clf_route_continuity:.3f} | {r.recon_route_continuity:.3f} | {r.recon_route_f1:.3f} |")
+    return out
+
+
+def heldout_pdf(d, dec) -> list:
+    if not d["ho"]:
+        return []
+    h, ht = d["ho"]["summary"], d["ho_trips"]
+    worse = ht[ht.hmm_top1 < ht.clf_top1]
+    better = ht[ht.hmm_top1 > ht.clf_top1]
+    lo = ht.sort_values("hmm_top1").iloc[0]
+    story = [P("7.1 Held-out evaluation on the evaluator trips", H2), P(
+        f"The {h['n_trips']} evaluator trips ({h['n_fixes']:,} fixes) arrived after development was finished. They share no trip ID and no "
+        "track file with the training or student-testing data. They were scored exactly once by scripts/evaluate_heldout.py with the "
+        "frozen deployed artifacts (classifier, feature schema, tuned HMM parameters). The deployed MapMatcher predicts from "
+        ".track/.nodes/.arcs; only afterwards is .route read, aligned with the same labelling procedure, and the prediction scored with the "
+        "same code as the student-test table above. Nothing was retrained, tuned or selected on these results.")]
+    rows = [["Metric", "Student-test clf", "Student-test + HMM", "Evaluator clf", "Evaluator + HMM"]]
+    for name, a, b in METRIC_ROWS:
+        rows.append([name, _fmt(a, dec[a]) if dec else "", _fmt(b, dec[b]) if dec else "", _fmt(a, h[a]), _fmt(b, h[b])])
+    rows.append(["Candidate miss rate", f"{dec['miss_rate']:.4f}" if dec else "", "", f"{h['miss_rate']:.4f}", ""])
+    story += [table(rows, [5.4 * cm, 2.8 * cm, 3 * cm, 2.6 * cm, 2.8 * cm])]
+    text = (f"The held-out result is in line with the student-test result (Top-1 with HMM {h['hmm_top1']:.4f} vs "
+            f"{dec['hmm_top1']:.4f}), so the trip-grouped validation gave a reliable estimate of performance on unseen trips. "
+            if dec else "")
+    text += (f"The classifier alone reaches Macro-F1 {h['clf_macro_f1_threshold_0_5']:.4f} at threshold 0.5, log loss {h['clf_log_loss']:.4f} "
+             f"and ROC-AUC {h['clf_roc_auc']:.4f} on the evaluator candidates. The HMM improved Top-1 on {len(better)} of {len(ht)} trips")
+    if len(worse):
+        text += " and reduced it on " + ", ".join(f"{r.trip_id} ({r.clf_top1:.4f} → {r.hmm_top1:.4f})" for _, r in worse.iterrows())
+    text += (f"; in total it fixed {h['n_fixed_by_hmm']:.0f} fixes and broke {h['n_broken_by_hmm']:.0f}. Wrong-direction errors fell from "
+             f"{h['clf_err_reverse_by_hmm']:.0f} to {h['hmm_err_reverse_by_hmm']:.0f} and junction-neighbour errors from "
+             f"{h['clf_err_adjacent_by_hmm']:.0f} to {h['hmm_err_adjacent_by_hmm']:.0f}. The weakest trip is {lo.trip_id} "
+             f"(HMM Top-1 {lo.hmm_top1:.4f}, candidate miss rate {lo.miss_rate:.4f}).")
+    story += [P(text)]
+    rows = [["Trip", "fixes", "miss rate", "clf Top-1", "HMM Top-1", "clf contin.", "recon contin.", "recon F1", "fixed", "broken"]]
+    for _, r in ht.iterrows():
+        rows.append([r.trip_id, int(r.n_fixes), f"{r.miss_rate:.4f}", f"{r.clf_top1:.4f}", f"{r.hmm_top1:.4f}", f"{r.clf_route_continuity:.3f}",
+                     f"{r.recon_route_continuity:.3f}", f"{r.recon_route_f1:.3f}", int(r.n_fixed_by_hmm), int(r.n_broken_by_hmm)])
+    story += [table(rows)]
+    story += img(FIG / "heldout_per_trip.png", caption="Fig. 24: held-out evaluator trips: per-trip Top-1 and route continuity.")
+    return story
+
+
 def build_pdf(d, best):
     s = d["summary"].sort_values("cv_macro_f1", ascending=False)
     story = []
@@ -273,7 +349,10 @@ def build_pdf(d, best):
         "drivable route. " + (
             f"On the 10 student-testing trips, observation-level Top-1 accuracy rises from {dec['clf_top1']:.4f} (classifier only) to "
             f"{dec['hmm_top1']:.4f} with the HMM, and mean route continuity from {dec['clf_route_continuity']:.3f} to "
-            f"{dec['recon_route_continuity']:.3f}. " if dec else "") +
+            f"{dec['recon_route_continuity']:.3f}. " if dec else "") + (
+            f"On the 10 held-out evaluator trips, scored once with the frozen pipeline after all modelling decisions, Top-1 rises from "
+            f"{d['ho']['summary']['clf_top1']:.4f} to {d['ho']['summary']['hmm_top1']:.4f} and route continuity from "
+            f"{d['ho']['summary']['clf_route_continuity']:.3f} to {d['ho']['summary']['recon_route_continuity']:.3f}. " if d["ho"] else "") +
         "The trained pipeline is served by a FastAPI backend that keeps reference routes server-side and a React/Leaflet evaluator UI "
         "for the two-laptop deployment.")]
     # ---- intro
@@ -292,7 +371,10 @@ def build_pdf(d, best):
         story += [P(
             f"<b>Partitions.</b> {len(tr)} training trips ({int(tr.n_obs.sum()):,} GPS fixes) and {len(st)} student-testing trips "
             f"({int(st.n_obs.sum()):,} fixes); every trip has the four files .track, .nodes, .arcs and .route (360 files, none missing). "
-            f"The evaluator-testing partition was not supplied; the API is prepared to load it from data/raw/evaluator_test. "
+            + (f"The {d['ho']['summary']['n_trips']} evaluator-testing trips ({d['ho']['summary']['n_fixes']:,} fixes) were received after "
+               "development was finished; they share no trip ID or track file with the other partitions, were not opened by EDA, training "
+               "or tuning, and are used only for the final held-out measurement in section 7.1. "
+               if d["ho"] else "The evaluator-testing partition was not supplied; the API is prepared to load it from data/raw/evaluator_test. ") +
             f"Unless stated otherwise, EDA figures use both train and student-test (marked by colour); all modelling decisions "
             f"(candidate radius, features, hyperparameters, decoder parameters) were made on the training partition only."),
             P(f"<b>Sizes.</b> Fixes per trip {int(val.n_obs.min())}–{int(val.n_obs.max())} (median {int(val.n_obs.median())}); road networks "
@@ -504,6 +586,7 @@ def build_pdf(d, best):
         story += [table(rows)]
     story += img(FIG / "hmm_vs_classifier_summary.png", 14, caption="Fig. 22: classifier-only vs classifier + HMM (student-test).")
     story += img(FIG / "hmm_vs_classifier_per_trip.png", caption="Fig. 23: per-trip Top-1 and route continuity.")
+    story += heldout_pdf(d, dec)
     # ---- Folium
     story += [PageBreak(), P("8. Geographical visualisation with Folium", H1), P(
         "Maps are generated by scripts/generate_maps.py (src/pathsnap/visualisation/folium_maps.py) from the real data and the deployed "
@@ -542,8 +625,9 @@ def build_pdf(d, best):
         "end-to-end runs on synthetic and real trips. Results are recorded in FINAL_ACCEPTANCE_TEST.md.")]
     story += [P("11. Limitations", H1), P(
         "Arcs are straight segments (no curved shape points); the candidate miss rate bounds accuracy; reference routes contain breaks and "
-        "parked periods, so labels are approximate; KNN and SVM were trained on subsamples; the evaluator partition was not available, so "
-        "final-evaluation numbers cannot be reported here; the two-laptop LAN demonstration must be performed and captured by the team.")]
+        "parked periods, so labels are approximate; KNN and SVM were trained on subsamples; " + (
+        "the held-out evaluator set is only 10 trips, so its trip-level spread is large (one trip is decoded worse by the HMM); "
+        if d["ho"] else "the evaluator partition was not available, so final-evaluation numbers cannot be reported here; ") + "the two-laptop LAN demonstration must be performed and captured by the team.")]
     story += [P("12. Conclusion", H1), P(
         "A complete, reproducible map-matching system was built and evaluated with trip-grouped validation. Gradient-boosted and bagged "
         "tree ensembles beat linear, generative, instance-based and kernel models consistently across folds, although by modest margins on "
@@ -551,7 +635,9 @@ def build_pdf(d, best):
         "HistGradientBoosting gives the best balance of accuracy, probability quality and cost, and Bayesian optimisation added a small, "
         "within-noise gain on CV with a clearer improvement in log loss. The largest gain comes from sequential decoding: an HMM that "
         "respects network connectivity improved Top-1 on every student-test trip and turned independent noisy decisions into "
-        "almost perfectly drivable routes. The remaining errors are dominated by direction and junction ambiguity while the vehicle is "
+        "almost perfectly drivable routes. " + (
+        f"The held-out evaluator trips confirm this: Top-1 {d['ho']['summary']['clf_top1']:.4f} → {d['ho']['summary']['hmm_top1']:.4f}, "
+        "in line with the student-test result, so the pipeline generalises to unseen trips. " if d["ho"] else "") + "The remaining errors are dominated by direction and junction ambiguity while the vehicle is "
         "slow or stationary, and by candidate misses.")]
     story += [P("References", H1)] + [P(x, SMALL) for x in [
         "[1] P. Newson and J. Krumm, 'Hidden Markov map matching through noise and sparseness', ACM SIGSPATIAL GIS, 2009.",
@@ -587,7 +673,9 @@ def write_quick_revision(d):
          "21 features → HistGradientBoosting P(correct) → HMM (emission = classifier log-prob, transition = −|d_route − d_gps|/β "
          "− U-turn penalty) → segmented Viterbi → shortest-path reconstruction → FastAPI → React UI. Labels: monotone DP "
          "alignment of fixes to .route (server-side/training only).", "",
-         "## Data", "80 train trips (208 417 fixes), 10 student-test (19 160), evaluator trips not supplied. 1 Hz; 135 gaps > 30 s "
+         "## Data", "80 train trips (208 417 fixes), 10 student-test (19 160), " + (
+             f"10 evaluator trips ({d['ho']['summary']['n_fixes']:,} fixes, held out, scored once at the end)" if d["ho"] else
+             "evaluator trips not supplied") + ". 1 Hz; 135 gaps > 30 s "
          "in 30 trips; 14 route breaks; candidate miss rate 1.14% train / 0.15% student-test.", "",
          "## Models (CV = 5-fold GroupKFold by trip; ST = student-test, classifier only)", "",
          "| Model | CV Macro-F1 | CV Top-1 | ST Top-1 | ST Macro-F1 | ST log loss | gap (train−val F1) |", "|---|---|---|---|---|---|---|"]
@@ -614,6 +702,13 @@ def write_quick_revision(d):
               f"Fixed {f['n_fixed_by_hmm']:.0f} fixes, broke {f['n_broken_by_hmm']:.0f}. Error types classifier → HMM: reverse direction "
               f"{f['clf_err_reverse_by_hmm']:.0f} → {f['hmm_err_reverse_by_hmm']:.0f}, junction neighbour {f['clf_err_adjacent_by_hmm']:.0f} → "
               f"{f['hmm_err_adjacent_by_hmm']:.0f}, other road {f['clf_err_other_by_hmm']:.0f} → {f['hmm_err_other_by_hmm']:.0f}."]
+    if d["ho"]:
+        h = d["ho"]["summary"]; ht = d["ho_trips"]
+        L += ["", "## Held-out evaluator trips (frozen pipeline, run once)",
+              f"Top-1 {h['clf_top1']:.4f} → {h['hmm_top1']:.4f}; continuity {h['clf_route_continuity']:.3f} → "
+              f"{h['recon_route_continuity']:.3f}; route F1 {h['clf_route_f1']:.3f} → {h['recon_route_f1']:.3f}; classifier log loss "
+              f"{h['clf_log_loss']:.4f}. HMM better on {(ht.hmm_top1 > ht.clf_top1).sum()}/{len(ht)} trips; worse on "
+              + (", ".join(ht[ht.hmm_top1 < ht.clf_top1].trip_id) or "none") + ". No overlap with train/student-test."]
     if d["abl"] is not None:
         L += ["", "## Feature ablation (Δ CV Top-1 when a group is removed)"] + [
             f"- {r.dropped_group}: {100 * r.delta_top1:+.2f} pts" for _, r in d["abl"].iloc[1:].iterrows()]

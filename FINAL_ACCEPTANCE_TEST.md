@@ -16,7 +16,7 @@ Date: 2026-11-18. Commands were run from the repository root unless stated. Outc
 | 6 | Report metrics match experiment outputs; screenshots are of the real application | PASS |
 | 7 | Final requirements audit against all five documents | PASS (`FINAL_DELIVERABLE_AUDIT.md`, `REQUIREMENTS_TRACEABILITY.md`) |
 | 8 | This document | PASS |
-| — | System works for the ten **evaluator** trips | **BLOCKED**: evaluator trips not supplied; all 10 student-test trips pass through the API |
+| — | System works for the ten **evaluator** trips | **PASS**: all 10 served in EVALUATION mode, 200 for every trip over Wi-Fi (`experiments/logs/lan_check_evaluator_trips.log`); held-out Top-1 0.9080 → 0.9590 (`experiments/results/heldout_evaluator_summary.json`) |
 
 ## 1. Data-leakage audit
 
@@ -127,7 +127,7 @@ cd frontend; npx vitest run; npx tsc -b   # 12 passed, type-check clean
 
 ## Remaining limitations
 
-1. Evaluator trips not supplied: final-evaluation metrics cannot be reported (BLOCKED).
+1. The held-out evaluator set is only 10 trips; on one (00000067) the HMM lowers Top-1 (0.9727 → 0.9421).
 2. The two-laptop demonstration and its screenshots must be done by the team (TEAM).
 3. Arcs are straight segments; candidate misses (1.1% train) cap accuracy; labels come from aligning to an imperfect reference.
 4. The best HMM grid values for w_clf and the U-turn penalty lie on the grid edge; a wider grid may help slightly.

@@ -1,0 +1,15 @@
+/health -> 200 {'status': 'ok', 'model_loaded': True, 'model_error': None, 'mode': 'EVALUATION', 'n_trips': 10, 'uptime_s': 452.12761068344116} (36 ms)
+mode=EVALUATION partition=evaluator_test trips=10
+/api/trips -> 200: ['00000015', '00000017', '00000023', '00000030', '00000049', '00000059', '00000067', '00000073', '00000087', '00000094']
+POST /api/predict/00000015 -> 200 in 7.80s  fixes=6854  hmm_top1=0.9546117921774664
+POST /api/predict/00000017 -> 200 in 4.34s  fixes=1346  hmm_top1=0.9257057949479941
+POST /api/predict/00000023 -> 200 in 0.85s  fixes=458  hmm_top1=0.9541484716157205
+POST /api/predict/00000030 -> 200 in 1.75s  fixes=654  hmm_top1=0.8853211009174312
+POST /api/predict/00000049 -> 200 in 3.24s  fixes=2642  hmm_top1=0.9920514761544285
+POST /api/predict/00000059 -> 200 in 2.42s  fixes=1031  hmm_top1=0.938894277400582
+POST /api/predict/00000067 -> 200 in 1.23s  fixes=916  hmm_top1=0.9421397379912664
+POST /api/predict/00000073 -> 200 in 3.89s  fixes=1144  hmm_top1=0.9790209790209791
+POST /api/predict/00000087 -> 200 in 2.75s  fixes=1399  hmm_top1=0.9907076483202287
+POST /api/predict/00000094 -> 200 in 5.24s  fixes=3230  hmm_top1=0.9609907120743034
+invalid trip id -> 404 (expected 404)
+ALL CHECKS PASSED

@@ -14,7 +14,7 @@ so quote them from there. ★ = harder question.
 7. **How did you derive per-fix labels?** DP that assigns each fix a route position, non-decreasing in time, minimising capped distance plus a heading penalty. Exact, O(N·M).
 8. ★ **Why the heading term in the alignment?** A road's two directions have identical geometry. On out-and-back trips, distance alone cannot tell them apart.
 9. **Why mark some fixes −1?** If the aligned arc is > 60 m away (typically a car parked off-network), the reference is unreliable for that fix, so we exclude it from training and scoring.
-10. **How many trips per partition?** 80 train, 10 student-test, 10 evaluator (not supplied yet).
+10. **How many trips per partition?** 80 train, 10 student-test, 10 evaluator (received at the end, held out: Top-1 0.9080 → 0.9590 with the HMM).
 11. **What sampling rate?** Nominally 1 Hz. Most steps are 1 s, but there are gaps up to ~42 h (trip 90).
 12. **Were there missing or invalid values?** None in the supplied files (see `reports/eda/data_quality_report.md`). The loaders still handle them.
 13. **What anomalies did EDA find?** Long gaps in 30 trips, parked periods off-network, 14 route breaks in 11 trips, duplicate arcs, self-loops.
@@ -24,7 +24,7 @@ so quote them from there. ★ = harder question.
 17. **What are disconnected components?** Groups of nodes with no path between them. Most networks have one large strongly-connected component plus small fragments.
 18. **Why do two-way roads matter?** Each direction is a separate arc. The model must pick the correct direction, which is where heading features come in.
 19. **Is the reference route perfect ground truth?** No. It has breaks, and GPS sometimes runs where the route does not. We treat it as reference and say so.
-20. **Which partition did you use for EDA?** Train and student-test (labelled as such). The evaluator partition is only inventoried, never opened.
+20. **Which partition did you use for EDA?** Train and student-test (labelled as such). The evaluator partition arrived after EDA and was not part of it; it was only scored once at the end with the frozen model.
 
 ## B. Preprocessing, candidates, features (21–45)
 

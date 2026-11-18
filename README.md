@@ -61,12 +61,14 @@ python scripts/feature_analysis.py              # permutation importance + group
 python -W ignore scripts/optimise.py            # Optuna TPE on HistGradientBoosting        (~25 min)
 python scripts/tune_hmm.py                      # decoder grid on training trips (OOF probs) (~10 min)
 python scripts/evaluate_all.py                  # classifier-only vs HMM on student test     (~2 min)
+python scripts/evaluate_heldout.py              # FINAL held-out score on evaluator trips (run once, frozen model)
 python scripts/generate_maps.py                 # Folium maps
 python scripts/make_report_figures.py           # model comparison figures
 python scripts/build_report.py                  # technical report PDF
 ```
 
-Seeds are fixed (42). The evaluator partition is never read by any of these scripts.
+Seeds are fixed (42). The evaluator partition is read only by `evaluate_heldout.py`, which scores the frozen deployed
+pipeline once; no training, tuning or selection script reads it or its output.
 
 ## 3. Tests
 

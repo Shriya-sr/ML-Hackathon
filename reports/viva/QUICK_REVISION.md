@@ -4,7 +4,7 @@
 raw .track/.nodes/.arcs → clean + per-trip UTM → STRtree candidates (R=50 m, K=10, fallback 150 m) → 21 features → HistGradientBoosting P(correct) → HMM (emission = classifier log-prob, transition = −|d_route − d_gps|/β − U-turn penalty) → segmented Viterbi → shortest-path reconstruction → FastAPI → React UI. Labels: monotone DP alignment of fixes to .route (server-side/training only).
 
 ## Data
-80 train trips (208 417 fixes), 10 student-test (19 160), evaluator trips not supplied. 1 Hz; 135 gaps > 30 s in 30 trips; 14 route breaks; candidate miss rate 1.14% train / 0.15% student-test.
+80 train trips (208 417 fixes), 10 student-test (19 160), 10 evaluator trips (19,674 fixes, held out, scored once at the end). 1 Hz; 135 gaps > 30 s in 30 trips; 14 route breaks; candidate miss rate 1.14% train / 0.15% student-test.
 
 ## Models (CV = 5-fold GroupKFold by trip; ST = student-test, classifier only)
 
@@ -27,6 +27,9 @@ Tuned vs untuned: CV Macro-F1 0.9332 → 0.9343; ST Top-1 0.8950 → 0.9000; ST 
 Params: w_clf=0.5, beta=10.0 m, w_dist=1.0, U-turn=5.0, vmax=55.0 m/s, gap break > 120.0 s, top-8 states.
 Top-1 0.9000 → 0.9544; route continuity 0.782 → 0.901 (→ 0.997 with reconstruction); route F1 0.949 → 0.989; edit similarity 0.665 → 0.942.
 Fixed 1296 fixes, broke 256. Error types classifier → HMM: reverse direction 701 → 321, junction neighbour 824 → 432, other road 388 → 120.
+
+## Held-out evaluator trips (frozen pipeline, run once)
+Top-1 0.9080 → 0.9590; continuity 0.789 → 0.994; route F1 0.926 → 0.987; classifier log loss 0.0766. HMM better on 9/10 trips; worse on 00000067. No overlap with train/student-test.
 
 ## Feature ablation (Δ CV Top-1 when a group is removed)
 - geometric: -4.05 pts

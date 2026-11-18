@@ -7,7 +7,7 @@ Status: **PASS** (implemented and verified by the stated method) · **PARTIAL** 
 
 | # | Requirement | Source | Implementation | Verification | Status | Limitation |
 |---|---|---|---|---|---|---|
-| 1 | Inspect raw data: trips per partition, fixes per trip, file availability/sizes, types | DE §4 | `scripts/run_eda.py`, `data/loader.py`, `data/validator.py` | `reports/eda/dataset_inventory.csv` (90 trips, 360 files, 0 missing) | PASS | evaluator partition absent |
+| 1 | Inspect raw data: trips per partition, fixes per trip, file availability/sizes, types | DE §4 | `scripts/run_eda.py`, `data/loader.py`, `data/validator.py` | `reports/eda/dataset_inventory.csv` (90 trips, 360 files, 0 missing) | PASS | evaluator trips arrived later; held out (not part of EDA) |
 | 2 | Missing/invalid fixes, timestamp ordering, irregular gaps | DE §4 | `validator.py`, `preprocessing.py` | `timestamp_analysis.csv`, `data_quality_report.md`; `tests/unit/test_data.py` | PASS | |
 | 3 | Geographic extent, network size, connectivity, isolated nodes, components | DE §4 | `validator.py` (scipy connected_components) | `network_connectivity.csv`, fig. 04 | PASS | |
 | 4 | Reference route structure and limitations | DE §4, §6 | `validator.py`, `labeling.py` | route breaks/continuity in CSV; `docs/methodology.md` §3 | PASS | |
@@ -33,7 +33,7 @@ Status: **PASS** (implemented and verified by the stated method) · **PARTIAL** 
 | 24 | Export model + preprocessing + HMM config artifacts | MG §4, MT §5 | `artifacts/models/final_classifier.joblib`, `artifacts/metadata/*.json` | `MapMatcher` loads and validates schema | PASS | |
 | 25 | FastAPI backend processing evaluation requests | MT §5–6 | `backend/` | `backend/tests/test_api.py` | PASS | |
 | 26 | API computes accuracy from internal reference data, labels stay server-side | MT §6, AP §7 | `inference/pipeline.py::RouteEvaluator` | `test_no_ground_truth_leakage` | PASS | |
-| 27 | Works for all ten reserved trips | MT §6 | registry over `evaluator_test/` | BLOCKED: reserved trips not supplied; verified on all 10 student trips | BLOCKED | |
+| 27 | Works for all ten reserved trips | MT §6 | registry over `evaluator_test/` | `experiments/logs/lan_check_evaluator_trips.log` (10/10 → 200, EVALUATION mode); `scripts/evaluate_heldout.py` | PASS | |
 | 28 | API logs visible on Laptop 1 | MT §6 | access-log middleware in `backend/main.py` | console output | PASS | |
 | 29 | UI shows 10 trips, sends id, displays route + results | MG §3, MT §6 | `frontend/` | vitest + headless screenshots | PASS | |
 | 30 | Two-laptop deployment | MG §3 | configurable host/port/API URL; `docs/deployment.md` | TEAM: must be demonstrated on two machines | TEAM | single-machine verified |

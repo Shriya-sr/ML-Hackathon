@@ -159,7 +159,7 @@ Feature value is checked by permutation importance and group ablation on trainin
 | learned preprocessing fitted on test | only scalers inside Pipelines, re-fitted per training fold |
 | feature selection on test | permutation importance / ablation on training folds only |
 | hyperparameter or decoder tuning on test | Optuna and HMM grid use training trips only; student-test scored once afterwards |
-| evaluator data | never read by any training/tuning script; API scores it server-side and returns aggregates only |
+| evaluator data | arrived after development; never read by any training/tuning script; scored once by `scripts/evaluate_heldout.py` with frozen artifacts; the API scores it server-side and returns aggregates only |
 
 ## 11. Reproduce everything
 
