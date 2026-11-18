@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+
+# Secrets / local config
+.env
+.env.*
+!.env.example
+frontend/.env.local
+
+# Raw dataset (distributed by the course; place it under data/raw - see data/README.md)
+data/raw/*
+!data/raw/.gitkeep
+# Reproducible intermediate tables (rebuilt by scripts/build_features.py)
+data/processed/*
+!data/processed/.gitkeep
+data/interim/*
+!data/interim/.gitkeep
+
+# Large per-experiment model files (rebuilt by scripts/train_all.py). The FINAL
+# inference artifacts in artifacts/models/*.joblib are committed.
+artifacts/models/experiments/
+
+# Node / frontend build
+frontend/node_modules/
+frontend/dist/
+frontend/*.tsbuildinfo
+frontend/tsconfig.tsbuildinfo
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log.tmp

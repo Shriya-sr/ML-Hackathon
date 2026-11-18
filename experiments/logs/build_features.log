@@ -1,0 +1,2 @@
+[train] trips=80 fixes=208417 labelled=186209 rows=1246339 pos=184089 miss_rate=0.0114
+[student_test] trips=10 fixes=19160 labelled=19135 rows=131544 pos=19107 miss_rate=0.0015

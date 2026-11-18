@@ -1,0 +1,17 @@
+# Candidate generation and feature engineering
+feature_version: "v1"
+
+candidates:
+  radius_m: 50.0           # search radius around each GPS fix (chosen from the radius sweep in reports/eda)
+  max_candidates: 10       # keep the K nearest arcs (arcs come in two-way pairs -> ~5 roads)
+  fallback_radius_m: 150.0 # if nothing is within radius_m, take the single nearest arc within this distance
+
+kinematics:
+  heading_window: 2        # heading from fix i-w to i+w
+  min_heading_disp_m: 3.0  # below this displacement the heading is considered unreliable
+  context_window: 3        # neighbours on each side for windowed distance features
+  long_window: 5           # baseline for the long-window bearing feature
+  min_long_disp_m: 5.0
+
+training:
+  obs_stride: 2            # use every 2nd fix of a training trip (1 Hz fixes are highly autocorrelated)
