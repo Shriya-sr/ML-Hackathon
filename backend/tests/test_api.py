@@ -30,6 +30,15 @@ needs_real = pytest.mark.skipif(not (HAVE_DATA and HAVE_MODEL), reason="dataset 
 SMALL = "00000052"
 
 
+@pytest.fixture(scope="module", autouse=True)
+def _serve_student_test():
+    """Pin the API to the student-testing trips. Without this, the server switches to EVALUATION mode as soon
+    as real evaluator trips are in place, and the expectations below (trip 00000052, 262 fixes) no longer apply."""
+    with pytest.MonkeyPatch.context() as mp:
+        mp.setenv("PATHSNAP_EVAL_PARTITION", "student_test")
+        yield
+
+
 @pytest.fixture(scope="module")
 def client():
     app = create_app()
@@ -158,9 +167,11 @@ def test_malformed_trip_files_return_422(tmp_path, monkeypatch):
     root = tmp_path / "data"
     shutil.copytree(DATA / SMALL, root / "evaluator_test" / SMALL)
     (root / "evaluator_test" / SMALL / f"{SMALL}.arcs").write_text("0 1\n1 2.5\n")
-    monkeypatch.setenv("PATHSNAP_DATA_DIR", str(root))
-    app = create_app()
-    with TestClient(app) as c:
-        assert c.get("/api/system/info").json()["mode"] == "EVALUATION"
-        assert c.post(f"/api/predict/{SMALL}").status_code == 422
-    dependencies.init_state()   # restore default state for other tests
+    with monkeypatch.context() as mp:
+        mp.setenv("PATHSNAP_DATA_DIR", str(root))
+        mp.setenv("PATHSNAP_EVAL_PARTITION", "evaluator_test")
+        app = create_app()
+        with TestClient(app) as c:
+            assert c.get("/api/system/info").json()["mode"] == "EVALUATION"
+            assert c.post(f"/api/predict/{SMALL}").status_code == 422
+    dependencies.init_state()   # restore the pinned default state for other tests
