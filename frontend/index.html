@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>PathSnap evaluator</title>
+  <style>
+    body{font:16px system-ui,sans-serif;max-width:1100px;margin:32px auto;padding:0 18px;color:#17202a}
+    header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    select,button{font:inherit;padding:10px 14px;border:1px solid #aab7b8;border-radius:7px;background:#fff}
+    button{background:#155e75;color:#fff;border:0;cursor:pointer}button:disabled{opacity:.6}
+    #status{min-height:1.5em;color:#566573}.metrics{display:flex;gap:12px;flex-wrap:wrap}.metric{background:#f2f7f7;padding:12px 16px;border-radius:8px}
+    iframe{width:100%;height:620px;border:1px solid #d5d8dc;border-radius:8px;margin-top:14px}
+  </style>
+</head>
+<body>
+  <header><div><h1>PathSnap</h1><p>GPS route reconstruction on the road network</p></div>
+    <div><select id="trip"><option>Loading trips…</option></select> <button id="run">Predict route</button></div>
+  </header>
+  <p id="status">Select a student-test trip to start.</p><section id="metrics" class="metrics"></section>
+  <iframe id="map" title="Predicted route map" hidden></iframe>
+  <script>
+    const trip=document.querySelector('#trip'), run=document.querySelector('#run'), status=document.querySelector('#status');
+    fetch('/api/trips').then(r=>r.json()).then(d=>{trip.innerHTML=d.trips.map(t=>`<option value="${t.id}">${t.id} (${t.observations} GPS points)</option>`).join('')||'<option>No trips available</option>';}).catch(()=>status.textContent='Could not load trips. Check the API connection.');
+    run.onclick=async()=>{run.disabled=true;status.textContent='Matching GPS observations to roads…';try{const r=await fetch(`/api/predict/${encodeURIComponent(trip.value)}`,{method:'POST'});const d=await r.json();if(!r.ok)throw Error(d.detail||'Prediction failed');
+      const pct=x=>(100*x).toFixed(1)+'%'; document.querySelector('#metrics').innerHTML=`<div class="metric">Classifier accuracy: ${pct(d.metrics.classifier_top1_accuracy)}</div><div class="metric">Decoded accuracy: ${pct(d.metrics.hmm_top1_accuracy)}</div><div class="metric">Macro F1: ${pct(d.metrics.hmm_macro_f1)}</div><div class="metric">Route continuity: ${pct(d.metrics.route_continuity)}</div><div class="metric">Candidate misses: ${pct(d.metrics.candidate_miss_rate)}</div>`;
+      const frame=document.querySelector('#map');frame.src=d.map_url;frame.hidden=false;status.textContent=`Predicted route for trip ${d.trip_id} (${d.observations} observations).`;
+    }catch(e){status.textContent=e.message;}finally{run.disabled=false;}};
+  </script>
+</body>
+</html>
