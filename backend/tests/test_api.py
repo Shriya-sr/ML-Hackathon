@@ -20,9 +20,10 @@ from fastapi.testclient import TestClient  # noqa: E402
 from backend import dependencies  # noqa: E402
 from backend.main import create_app  # noqa: E402
 from backend.settings import get_settings  # noqa: E402
+from pathsnap.config import data_dir  # noqa: E402
 from pathsnap.data.loader import load_trip  # noqa: E402
 
-DATA = ROOT / "data" / "raw" / "student_test"
+DATA = data_dir() / "student_test"   # honours PATHSNAP_DATA_DIR
 HAVE_DATA = (DATA / "00000052" / "00000052.track").exists()
 HAVE_MODEL = (ROOT / "artifacts" / "models" / "final_classifier.joblib").exists()
 needs_real = pytest.mark.skipif(not (HAVE_DATA and HAVE_MODEL), reason="dataset or model artifacts not present")

@@ -7,10 +7,11 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
+from pathsnap.config import data_dir
 from pathsnap.inference.pipeline import MapMatcher, RouteEvaluator
 
 ROOT = Path(__file__).resolve().parents[2]
-DATA = ROOT / "data" / "raw" / "student_test"
+DATA = data_dir() / "student_test"   # honours PATHSNAP_DATA_DIR
 OFFLINE = ROOT / "experiments" / "results" / "decoder_comparison_final.csv"
 pytestmark = pytest.mark.skipif(
     not ((ROOT / "artifacts" / "models" / "final_classifier.joblib").exists() and DATA.exists()),
