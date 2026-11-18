@@ -234,10 +234,7 @@ Details: [`TEAM.md`](TEAM.md).
 
 ## AI-assistance disclosure
 
-As Section 8 of the submission guidelines requires: this repository was implemented with substantial help from an AI
-coding assistant (Claude Code), working under the team's direction. Every number in the report and in this README comes
-from scripts in this repository run on the supplied data. Each team member is responsible for understanding and
-defending their area.
+This project was built with substantial help from an AI coding assistant, under the team's direction.
 
 <details>
 <summary>Provenance of the experiment records</summary>

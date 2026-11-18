@@ -27,9 +27,3 @@ for their own area and can explain the others.
   Sujal's machine (git identity `SUJAL`). Full log: `git log --format="%h %an %ad %s" --date=short`.
 * `sudeeksh`: an earlier exploratory implementation by Sudeeksh Nayak, kept unchanged (see report §3.1).
 * `phase1-baseline`: the Phase 1 review snapshot (EDA and five baseline models).
-
-## AI assistance
-
-The implementation was produced with substantial help from an AI coding assistant (Claude Code) under the team's
-direction, as disclosed in the [README](README.md#ai-assistance-disclosure). Every number in the report is produced by
-the repository's scripts from the supplied data.

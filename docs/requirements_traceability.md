@@ -41,4 +41,4 @@ Status: **PASS** (implemented and verified by the stated method) · **PARTIAL** 
 | 32 | Public GitHub repo with all code, results, README, organised folders, no secrets | DL §1 | this repo, `.gitignore` | `git ls-files` review | PASS | repo visibility is the owner's setting |
 | 33 | Consolidated technical report PDF following the required structure | DL §1–7 | `scripts/build_report.py` | `reports/technical_report/PathSnap_Technical_Report.pdf` | PASS | two-laptop screenshots to be added by team |
 | 34 | UI screenshots + API console screenshots from receiving laptop | DL §7 | `scripts/capture_screenshots.py` | single-machine captures | PARTIAL | two-laptop captures: TEAM |
-| 35 | Disclose AI assistance; team can explain everything | DL §8, AP §5 | README disclosure, `TEAM.md` | viva material | PASS / TEAM | understanding is the team's responsibility |
+| 35 | Disclose AI assistance; team can explain everything | DL §8, AP §5 | README disclosure, report §8 | viva material | PASS / TEAM | understanding is the team's responsibility |
