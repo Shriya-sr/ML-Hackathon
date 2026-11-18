@@ -41,7 +41,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("mode", choices=["maps", "ui"])
     ap.add_argument("--ui", default="http://localhost:5173")
-    ap.add_argument("--trips", nargs="*", default=["00000052", "00000009"])
+    ap.add_argument("--trips", nargs="*", default=["00000087", "00000015"])
     a = ap.parse_args()
     if a.mode == "maps":
         for f in sorted((ROOT / "maps" / "html").glob("*.html")):

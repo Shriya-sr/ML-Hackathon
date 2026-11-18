@@ -1,7 +1,7 @@
-"""Explanatory figures for the team guide, drawn from REAL pipeline output on a student-testing trip.
+"""Explanatory figures (README / docs), drawn from REAL pipeline output on student-testing trips.
 
-Usage:   python scripts/make_guide_figures.py [--trip 00000077]
-Outputs: reports/guide/figures/{guide_hmm_zoom,guide_one_fix,guide_trellis,guide_groupkfold}.png
+Usage:   python scripts/make_explainer_figures.py [--trip 00000077] [--banner-trip 00000052]
+Outputs: reports/figures/explainer_{hmm_zoom,one_fix,trellis,groupkfold}.png, docs/assets/banner.png
 """
 from __future__ import annotations
 
@@ -23,7 +23,8 @@ from pathsnap.data.loader import read_route  # noqa: E402
 from pathsnap.inference.pipeline import MapMatcher  # noqa: E402
 from pathsnap.visualisation.plots import plt, save  # noqa: E402
 
-OUT = ROOT / "reports" / "guide" / "figures"
+OUT = ROOT / "reports" / "figures"
+ASSETS = ROOT / "docs" / "assets"
 BLUE, ORANGE, GREEN, GREY, RED = "#2f74e0", "#f07b1d", "#1fa45a", "#b9bec6", "#d64545"
 
 
@@ -61,10 +62,48 @@ def arrow(ax, net, a, color, lw):
     _ = lw
 
 
+def banner(tid: str):
+    """README banner: the real GPS fixes and the real HMM route of one student-test trip, on its road network."""
+    ASSETS.mkdir(parents=True, exist_ok=True)
+    pred = MapMatcher().predict(data_dir() / "student_test" / tid)
+    ctx, net = pred.ctx, pred.ctx.net
+    px, py = ctx.px, ctx.py
+    aspect = 16 / 4.45
+    H = np.ptp(py) * 1.22
+    W = max(H * aspect, np.ptp(px) / 0.42)          # the trip fills the right ~42% of the banner
+    H = W / aspect
+    cy = (py.min() + py.max()) / 2
+    x1 = px.max() + 0.05 * W
+    x0, y0, y1 = x1 - W, cy - H / 2, cy + H / 2
+    fig = plt.figure(figsize=(16, 4.45), dpi=110)
+    ax = fig.add_axes([0, 0, 1, 1]); ax.set_facecolor("#0b1f3a"); fig.patch.set_facecolor("#0b1f3a")
+    mx, my = (net.ax + net.bx) / 2, (net.ay + net.by) / 2
+    sel = np.where((mx > x0 - 300) & (mx < x1 + 300) & (my > y0 - 300) & (my < y1 + 300))[0]
+    from matplotlib.collections import LineCollection
+    segs = np.stack([np.stack([net.ax[sel], net.ay[sel]], 1), np.stack([net.bx[sel], net.by[sel]], 1)], 1)
+    ax.add_collection(LineCollection(segs, colors="#1e3d66", linewidths=0.9, zorder=1))
+    route = pred.route[pred.route >= 0]
+    rsegs = np.stack([np.stack([net.ax[route], net.ay[route]], 1), np.stack([net.bx[route], net.by[route]], 1)], 1)
+    ax.add_collection(LineCollection(rsegs, colors="#0fa3a3", linewidths=11, alpha=0.18, zorder=2, capstyle="round"))
+    ax.add_collection(LineCollection(rsegs, colors="#19c2c2", linewidths=3.6, zorder=3, capstyle="round"))
+    ax.scatter(px, py, s=7, color="#8cc0ff", alpha=0.9, zorder=4, linewidths=0)
+    ax.scatter([px[0]], [py[0]], s=110, color="#f07b1d", zorder=5); ax.scatter([px[-1]], [py[-1]], s=110, color="#1fa45a", zorder=5)
+    ax.set(xlim=(x0, x1), ylim=(y0, y1)); ax.set_aspect("auto"); ax.axis("off")
+    fig.text(0.035, 0.62, "PathSnap", color="white", fontsize=50, fontweight="bold", family="DejaVu Sans")
+    fig.text(0.037, 0.46, "Map-matching noisy GPS to the road a car really drove", color="#c9d6e8", fontsize=17)
+    fig.text(0.037, 0.33, "classifier  →  HMM + Viterbi  →  FastAPI  →  live React map", color="#0fd0d0", fontsize=13.5)
+    fig.text(0.037, 0.12, f"real data: student-test trip {tid}  ·  blue = raw GPS fixes  ·  teal = our decoded route",
+             color="#7f93ad", fontsize=10)
+    fig.savefig(ASSETS / "banner.png", facecolor=fig.get_facecolor())
+    plt.close(fig)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--trip", default="00000077")
+    ap.add_argument("--banner-trip", default="00000065")
     a = ap.parse_args()
+    banner(a.banner_trip)
     OUT.mkdir(parents=True, exist_ok=True)
     d = data_dir() / "student_test" / a.trip
     mm = MapMatcher()
@@ -109,7 +148,7 @@ def main():
     axs[0].plot([x0 + 10, x0 + 60], [y1 - 12, y1 - 12], color="black", lw=2)
     axs[0].text(x0 + 35, y1 - 9, "50 m", ha="center", fontsize=8)
     fig.suptitle(f"Real example (car moving): student-test trip {a.trip}, fixes {i0}-{i0 + 39}", fontsize=11)
-    save(fig, OUT / "guide_hmm_zoom.png")
+    save(fig, OUT / "explainer_hmm_zoom.png")
 
     # ---------- 2. one fix: its candidates and probabilities
     idx_s = np.arange(i_slow, i_slow + 26)
@@ -146,7 +185,7 @@ def main():
     ax.set(xlim=(fx - r - 15, fx + r + 15), ylim=(fy - r - 15, fy + r + 15),
            title=f"One GPS fix, {len(cf)} candidate road segments,\nand the classifier's probability for each")
     ax.set_aspect("equal"); ax.set_xticks([]); ax.set_yticks([]); ax.grid(False)
-    save(fig, OUT / "guide_one_fix.png")
+    save(fig, OUT / "explainer_one_fix.png")
 
     # ---------- 3. Viterbi trellis with real probabilities
     seq = [o for o in range(f - 3, f + 3)]
@@ -196,7 +235,7 @@ def main():
     ax.axis("off")
     ax.set_title("Viterbi trellis (real numbers): columns = GPS fixes, circles = candidate roads (letter = road, number = classifier P)",
                  fontsize=10)
-    save(fig, OUT / "guide_trellis.png")
+    save(fig, OUT / "explainer_trellis.png")
 
     # ---------- 4. GroupKFold picture
     rng = np.random.default_rng(42)
@@ -210,7 +249,7 @@ def main():
     fig.suptitle("5-fold GroupKFold by trip: every square is one whole training trip. Orange = validation trips in that fold, "
                  "blue = training trips.\nA trip is never split, so the model is always scored on journeys it has never seen.",
                  fontsize=9.5)
-    save(fig, OUT / "guide_groupkfold.png")
+    save(fig, OUT / "explainer_groupkfold.png")
     print("fix", f, "slow window", i_slow, "moving window", i0, "candidates", len(cf),
           "clf arc is reverse of hmm arc:", bool(net.reverse_arc[pred.hmm_arc[f]] == pred.clf_arc[f]))
 

@@ -14,7 +14,7 @@ Date: 2026-11-18. Commands were run from the repository root unless stated. Outc
 | 4 | Controlled failure recovery | PASS |
 | 5 | Genuine two-laptop LAN demonstration | **TEAM**: single-machine LAN-interface test PASS; two-laptop run not possible from one machine |
 | 6 | Report metrics match experiment outputs; screenshots are of the real application | PASS |
-| 7 | Final requirements audit against all five documents | PASS (`FINAL_DELIVERABLE_AUDIT.md`, `REQUIREMENTS_TRACEABILITY.md`) |
+| 7 | Final requirements audit against all five documents | PASS (`docs/deliverable_audit.md`, `docs/requirements_traceability.md`) |
 | 8 | This document | PASS |
 | — | System works for the ten **evaluator** trips | **PASS**: all 10 served in EVALUATION mode, 200 for every trip over Wi-Fi (`experiments/logs/lan_check_evaluator_trips.log`); held-out Top-1 0.9080 → 0.9590 (`experiments/results/heldout_evaluator_summary.json`) |
 
@@ -131,4 +131,4 @@ cd frontend; npx vitest run; npx tsc -b   # 12 passed, type-check clean
 2. The two-laptop demonstration and its screenshots must be done by the team (TEAM).
 3. Arcs are straight segments; candidate misses (1.1% train) cap accuracy; labels come from aligning to an imperfect reference.
 4. The best HMM grid values for w_clf and the U-turn penalty lie on the grid edge; a wider grid may help slightly.
-5. Repository visibility (public) and real GitHub usernames in `TEAM_ROSTER.md` are for the team to set.
+5. Repository visibility (public) and real GitHub usernames in `TEAM.md` are for the team to set.

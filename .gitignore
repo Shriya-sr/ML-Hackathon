@@ -39,3 +39,6 @@ Thumbs.db
 .idea/
 .vscode/
 *.log.tmp
+
+# Local tool settings
+.claude/

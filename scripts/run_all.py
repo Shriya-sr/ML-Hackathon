@@ -1,7 +1,8 @@
-"""Run the complete experiment chain in order (same commands as README section 2).
+"""Run the complete development pipeline in order (the commands under "Reproduce every experiment" in the README).
 
 Usage:  python scripts/run_all.py [--from STEP]
-Steps: eda features train analysis optimise hmm evaluate maps figures report
+Steps: eda features train analysis optimise hmm evaluate maps figures explainer report
+(The held-out evaluation, scripts/evaluate_heldout.py, is run once by hand and is not part of this chain.)
 """
 from __future__ import annotations
 
@@ -22,6 +23,7 @@ STEPS = [
     ("evaluate", ["scripts/evaluate_all.py"]),
     ("maps", ["scripts/generate_maps.py"]),
     ("figures", ["scripts/make_report_figures.py"]),
+    ("explainer", ["scripts/make_explainer_figures.py"]),
     ("report", ["scripts/build_report.py"]),
 ]
 

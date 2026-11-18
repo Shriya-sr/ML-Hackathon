@@ -87,7 +87,7 @@ You can also open `http://localhost:8000/docs` in a browser to see the interacti
 ## 6. After the rehearsal: add the screenshots and rebuild the report
 
 1. Save the screenshots into `D:\ML hackathon\PATHSNAP\reports\figures\`:
-   * UI screenshots from Laptop 2 → `ui_trip_00000052.png`, `ui_trip_00000009.png` (overwrite the existing ones)
+   * UI screenshots from Laptop 2 → `ui_trip_00000087.png`, `ui_trip_00000015.png` (overwrite the existing ones)
    * a screenshot of this console with the request log → `api_console_log.png` (overwrite)
 2. Rebuild the PDF and commit:
 
