@@ -125,6 +125,15 @@ are read only by the server-side `RouteEvaluator`; responses contain aggregate m
 * Review 1 checkpoint: [`reports/review_1/`](reports/review_1/) · Viva: [`reports/viva/`](reports/viva/)
 * Technical report: [`reports/technical_report/PathSnap_Technical_Report.pdf`](reports/technical_report/PathSnap_Technical_Report.pdf)
 
+## Provenance of the experiment records
+
+The JSON records in `experiments/` cite `git_commit: be932cd` with `git_dirty: true`. They were produced from the working
+tree while the review-1 checkpoint commit was HEAD, and committed in `efefb9b`. The commit history was later rewritten to
+change commit messages only (authorship), so `be932cd` appears on GitHub as `e0fec1f` with an identical file tree. A clean
+clone rebuilt the features and retrained logistic regression and HistGradientBoosting and reproduced their recorded scores
+exactly (`FINAL_ACCEPTANCE_TEST.md` §3). An earlier exploratory implementation is kept unchanged on the `sudeeksh` branch;
+its own notes say its first results were invalidated by an alignment bug, so none of them are reported.
+
 ## AI-assistance disclosure
 
 Following Section 8 of the submission guidelines: this repository was implemented with substantial help from an

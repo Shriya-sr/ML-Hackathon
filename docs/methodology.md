@@ -98,7 +98,9 @@ Feature value is checked by permutation importance and group ablation on trainin
   * fix level: **Top-1 accuracy** (highest-probability candidate equals the reference arc; fixes with a missed or no
     candidate count as errors)
   * route level: see Section 9
-* **Primary selection metric**: mean CV Macro-F1, as the brief asks, read together with CV Top-1
+* **Primary selection metric**: mean CV Macro-F1. Candidate rows are imbalanced (184,089 of 1,246,339 training rows,
+  14.8%, are the correct road), so plain accuracy is dominated by the wrong-road class; Macro-F1 weights both classes equally and
+  penalises missed true segments and false matches alike. It is read together with CV Top-1
   (the map-matching objective), log loss (probability quality, which matters because probabilities feed the HMM
   emissions), fold stability and computational cost. Training accuracy is never used for selection.
 

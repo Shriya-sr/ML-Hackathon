@@ -18,7 +18,7 @@ Every number below comes from `experiments/results/model_summary.csv` and the fo
 
 7. *Student-test performance.* On the 10 student-testing trips (19 160 fixes): accuracy 0.9680, precision (positive) 0.9089, recall (positive) 0.8669, macro precision 0.9432, macro recall 0.9260, ROC-AUC 0.9918; route continuity of its independent argmax route 0.7713, route F1 0.9450. Training 66.1 s on 603,593 rows; inference 22.1 ms per 1000 fixes; artifact 59.4 MB.
 8. *Top-1, Macro-F1, log loss.* Observation-level Top-1 accuracy 0.8942, Macro-F1 0.9344, log loss 0.0784 (CV: Top-1 0.8840, Macro-F1 0.9336 ± 0.0144, log loss 0.0862).
-9. *Over/under-fitting.* Training-fold Macro-F1 0.9709 vs validation 0.9336 (gap +0.0373); Top-1 gap +0.0710; fold std 0.0144; student-test Macro-F1 0.9344 (+0.0007 vs CV). The gap is large relative to the fold-to-fold spread, so the model fits training trips noticeably better than unseen trips: clear signs of overfitting (fully grown trees memorise training rows). Its validation score is nevertheless among the best, so bagging keeps this memorisation from hurting generalisation; stronger leaf/depth limits would shrink the gap without a clear validation gain. The student-test score lies within two fold standard deviations of CV, so CV generalised to the unseen trips.
+9. *Over/under-fitting.* Training-fold Macro-F1 0.9709 vs validation 0.9336 (gap +0.0373, fold std 0.0144). The largest gap of all eight models: fully grown trees with 5-row leaves fit much of the training trips (overfitting at the level of each tree). Averaging 200 decorrelated trees removes most of that variance, so its validation Macro-F1 is still the highest (0.9336) and its fold spread is normal. Depth or leaf limits would shrink the gap; RF was not tuned further because HGB was selected. Student-test Macro-F1 0.9344 differs from CV by +0.0007 (0.1 fold std).
 
 ## HistGradientBoosting (Boosting)
 
@@ -36,7 +36,7 @@ Every number below comes from `experiments/results/model_summary.csv` and the fo
 
 7. *Student-test performance.* On the 10 student-testing trips (19 160 fixes): accuracy 0.9679, precision (positive) 0.8977, recall (positive) 0.8789, macro precision 0.9386, macro recall 0.9309, ROC-AUC 0.9913; route continuity of its independent argmax route 0.7701, route F1 0.9424. Training 3.2 s on 603,593 rows; inference 10.4 ms per 1000 fixes; artifact 0.2 MB.
 8. *Top-1, Macro-F1, log loss.* Observation-level Top-1 accuracy 0.8950, Macro-F1 0.9347, log loss 0.0828 (CV: Top-1 0.8840, Macro-F1 0.9332 ± 0.0138, log loss 0.0896).
-9. *Over/under-fitting.* Training-fold Macro-F1 0.9513 vs validation 0.9332 (gap +0.0181); Top-1 gap +0.0323; fold std 0.0138; student-test Macro-F1 0.9347 (+0.0016 vs CV). A moderate gap: some fitting to training rows, but validation performance stays close and stable, so variance is under control (mild overfitting). The student-test score lies within two fold standard deviations of CV, so CV generalised to the unseen trips.
+9. *Over/under-fitting.* Training-fold Macro-F1 0.9513 vs validation 0.9332 (gap +0.0181, fold std 0.0138). A moderate gap. The boosting history of the final fit (Fig. 19, 101 iterations) shows training and validation log loss falling together with no upturn in the validation curve, so boosting has not started to overfit. The remaining difference to Random Forest is within one fold standard deviation (RF 0.9336). Student-test Macro-F1 0.9347 differs from CV by +0.0016 (0.1 fold std).
 
 ## Extra Trees (Ensemble (randomised trees))
 
@@ -54,7 +54,7 @@ Every number below comes from `experiments/results/model_summary.csv` and the fo
 
 7. *Student-test performance.* On the 10 student-testing trips (19 160 fixes): accuracy 0.9666, precision (positive) 0.9038, recall (positive) 0.8617, macro precision 0.9402, macro recall 0.9231, ROC-AUC 0.9908; route continuity of its independent argmax route 0.7502, route F1 0.9383. Training 25.7 s on 603,593 rows; inference 26.8 ms per 1000 fixes; artifact 100.3 MB.
 8. *Top-1, Macro-F1, log loss.* Observation-level Top-1 accuracy 0.8872, Macro-F1 0.9314, log loss 0.0836 (CV: Top-1 0.8802, Macro-F1 0.9316 ± 0.0148, log loss 0.0885).
-9. *Over/under-fitting.* Training-fold Macro-F1 0.9527 vs validation 0.9316 (gap +0.0210); Top-1 gap +0.0361; fold std 0.0148; student-test Macro-F1 0.9314 (-0.0003 vs CV). A moderate gap: some fitting to training rows, but validation performance stays close and stable, so variance is under control (mild overfitting). The student-test score lies within two fold standard deviations of CV, so CV generalised to the unseen trips.
+9. *Over/under-fitting.* Training-fold Macro-F1 0.9527 vs validation 0.9316 (gap +0.0210, fold std 0.0148). The gap is about half of Random Forest's (+0.0373): random split thresholds stop the trees from following training rows as closely. The cost is a little extra bias, with validation 0.9316 vs RF 0.9336. Student-test Macro-F1 0.9314 differs from CV by -0.0003 (0.0 fold std).
 
 ## MLP (64-32) (Neural network)
 
@@ -72,7 +72,7 @@ Every number below comes from `experiments/results/model_summary.csv` and the fo
 
 7. *Student-test performance.* On the 10 student-testing trips (19 160 fixes): accuracy 0.9656, precision (positive) 0.8981, recall (positive) 0.8606, macro precision 0.9373, macro recall 0.9220, ROC-AUC 0.9900; route continuity of its independent argmax route 0.7668, route F1 0.9442. Training 114.4 s on 603,593 rows; inference 5.1 ms per 1000 fixes; artifact 0.1 MB.
 8. *Top-1, Macro-F1, log loss.* Observation-level Top-1 accuracy 0.8868, Macro-F1 0.9295, log loss 0.0878 (CV: Top-1 0.8836, Macro-F1 0.9296 ± 0.0145, log loss 0.0959).
-9. *Over/under-fitting.* Training-fold Macro-F1 0.9479 vs validation 0.9296 (gap +0.0183); Top-1 gap +0.0282; fold std 0.0145; student-test Macro-F1 0.9295 (-0.0001 vs CV). A moderate gap: some fitting to training rows, but validation performance stays close and stable, so variance is under control (mild overfitting). The student-test score lies within two fold standard deviations of CV, so CV generalised to the unseen trips.
+9. *Over/under-fitting.* Training-fold Macro-F1 0.9479 vs validation 0.9296 (gap +0.0183, fold std 0.0145). Early stopping (patience 10 on a 10% hold-out) ended training after 62 epochs (Fig. 19), which keeps the gap moderate. Validation (0.9296) is within 0.0040 of the best model, so the network neither overfits nor underfits strongly. Student-test Macro-F1 0.9295 differs from CV by -0.0001 (0.0 fold std).
 
 ## Logistic Regression (Linear / probabilistic)
 
@@ -90,7 +90,7 @@ Every number below comes from `experiments/results/model_summary.csv` and the fo
 
 7. *Student-test performance.* On the 10 student-testing trips (19 160 fixes): accuracy 0.9629, precision (positive) 0.8689, recall (positive) 0.8769, macro precision 0.9240, macro recall 0.9272, ROC-AUC 0.9852; route continuity of its independent argmax route 0.7562, route F1 0.9405. Training 2.0 s on 603,593 rows; inference 0.9 ms per 1000 fixes; artifact 0.0 MB.
 8. *Top-1, Macro-F1, log loss.* Observation-level Top-1 accuracy 0.8834, Macro-F1 0.9256, log loss 0.1019 (CV: Top-1 0.8820, Macro-F1 0.9262 ± 0.0159, log loss 0.1086).
-9. *Over/under-fitting.* Training-fold Macro-F1 0.9286 vs validation 0.9262 (gap +0.0025); Top-1 gap +0.0040; fold std 0.0159; student-test Macro-F1 0.9256 (-0.0006 vs CV). Training and validation scores are almost equal: no evidence of overfitting. However, even its training-fold score (0.9286) is below the best model's validation score (0.9336): the limitation is bias rather than variance, i.e. mild underfitting relative to the tree ensembles. The student-test score lies within two fold standard deviations of CV, so CV generalised to the unseen trips.
+9. *Over/under-fitting.* Training-fold Macro-F1 0.9286 vs validation 0.9262 (gap +0.0025, fold std 0.0159). With 21 coefficients and an L2 penalty the model cannot memorise training trips, so there is no overfitting. Its training score is itself below the best validation score (0.9336): that is mild underfitting, because one linear boundary cannot express interactions such as 'heading only matters when the vehicle is moving'. Student-test Macro-F1 0.9256 differs from CV by -0.0006 (0.0 fold std).
 
 ## RBF SVM (Platt-calibrated) (Kernel-based)
 
@@ -108,7 +108,7 @@ Every number below comes from `experiments/results/model_summary.csv` and the fo
 
 7. *Student-test performance.* On the 10 student-testing trips (19 160 fixes): accuracy 0.9636, precision (positive) 0.8959, recall (positive) 0.8480, macro precision 0.9352, macro recall 0.9156, ROC-AUC 0.9829; route continuity of its independent argmax route 0.7488, route F1 0.9379. Training 6.9 s on 19,937 rows; inference 1151.1 ms per 1000 fixes; artifact 0.2 MB.
 8. *Top-1, Macro-F1, log loss.* Observation-level Top-1 accuracy 0.8789, Macro-F1 0.9251, log loss 0.1073 (CV: Top-1 0.8789, Macro-F1 0.9244 ± 0.0167, log loss 0.1108).
-9. *Over/under-fitting.* Training-fold Macro-F1 0.9305 vs validation 0.9244 (gap +0.0061); Top-1 gap +0.0084; fold std 0.0167; student-test Macro-F1 0.9251 (+0.0007 vs CV). Training and validation scores are almost equal: no evidence of overfitting. However, even its training-fold score (0.9305) is below the best model's validation score (0.9336): the limitation is bias rather than variance, i.e. mild underfitting relative to the tree ensembles. The student-test score lies within two fold standard deviations of CV, so CV generalised to the unseen trips.
+9. *Over/under-fitting.* Training-fold Macro-F1 0.9305 vs validation 0.9244 (gap +0.0061, fold std 0.0167). A small gap, because the margin is regularised (C = 1) and only 19,937 rows were used. That subsample, not variance, is the limiting factor: validation trails the ensembles trained on all ~600k rows, so the model underfits slightly relative to them. Student-test Macro-F1 0.9251 differs from CV by +0.0007 (0.0 fold std).
 
 ## k-Nearest Neighbours (Instance-based)
 
@@ -126,7 +126,7 @@ Every number below comes from `experiments/results/model_summary.csv` and the fo
 
 7. *Student-test performance.* On the 10 student-testing trips (19 160 fixes): accuracy 0.9624, precision (positive) 0.8730, recall (positive) 0.8673, macro precision 0.9252, macro recall 0.9229, ROC-AUC 0.9808; route continuity of its independent argmax route 0.7371, route F1 0.9343. Training 0.0 s on 60,011 rows; inference 314.8 ms per 1000 fixes; artifact 3.9 MB.
 8. *Top-1, Macro-F1, log loss.* Observation-level Top-1 accuracy 0.8809, Macro-F1 0.9241, log loss 0.1344 (CV: Top-1 0.8711, Macro-F1 0.9223 ± 0.0167, log loss 0.1525).
-9. *Over/under-fitting.* Training-fold Macro-F1 0.9407 vs validation 0.9223 (gap +0.0183); Top-1 gap +0.0303; fold std 0.0167; student-test Macro-F1 0.9241 (+0.0017 vs CV). A moderate gap: some fitting to training rows, but validation performance stays close and stable, so variance is under control (mild overfitting). The student-test score lies within two fold standard deviations of CV, so CV generalised to the unseen trips.
+9. *Over/under-fitting.* Training-fold Macro-F1 0.9407 vs validation 0.9223 (gap +0.0183, fold std 0.0167). A moderate gap. With k = 25 neighbours taken from only 60,011 stored rows the neighbourhoods are coarse, so validation stays 0.011 below the best model and the probabilities are vote fractions (log loss 0.134). The limit is the subsample size and the distance metric (bias), not variance. Student-test Macro-F1 0.9241 differs from CV by +0.0017 (0.1 fold std).
 
 ## Gaussian Naive Bayes (Probabilistic (generative))
 
@@ -144,4 +144,4 @@ Every number below comes from `experiments/results/model_summary.csv` and the fo
 
 7. *Student-test performance.* On the 10 student-testing trips (19 160 fixes): accuracy 0.9463, precision (positive) 0.7836, recall (positive) 0.8708, macro precision 0.8806, macro recall 0.9150, ROC-AUC 0.9643; route continuity of its independent argmax route 0.7176, route F1 0.9048. Training 0.2 s on 603,593 rows; inference 3.9 ms per 1000 fixes; artifact 0.0 MB.
 8. *Top-1, Macro-F1, log loss.* Observation-level Top-1 accuracy 0.8593, Macro-F1 0.8966, log loss 0.4316 (CV: Top-1 0.8596, Macro-F1 0.9013 ± 0.0118, log loss 0.4131).
-9. *Over/under-fitting.* Training-fold Macro-F1 0.9040 vs validation 0.9013 (gap +0.0027); Top-1 gap +0.0049; fold std 0.0118; student-test Macro-F1 0.8966 (-0.0047 vs CV). Training and validation scores are almost equal: no evidence of overfitting. Its validation Macro-F1 is 0.032 below the best model while the training score is also low, which points to underfitting (the model family is too restrictive for these features). The student-test score lies within two fold standard deviations of CV, so CV generalised to the unseen trips.
+9. *Over/under-fitting.* Training-fold Macro-F1 0.9040 vs validation 0.9013 (gap +0.0027, fold std 0.0118). No overfitting (only per-class means and variances are learned), but clear underfitting: validation is 0.032 below the best model and its student-test log loss (0.432) is several times that of any other model. dist_m, dist_ratio and win_mean_dist_m are strongly correlated, and treating them as independent evidence makes the probabilities over-confident. Student-test Macro-F1 0.8966 differs from CV by -0.0047 (0.4 fold std).

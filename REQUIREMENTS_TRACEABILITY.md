@@ -19,8 +19,8 @@ Status: **PASS** (implemented and verified by the stated method) · **PARTIAL** 
 | 10 | 80 train trips for fitting + CV; 10 student trips for comparison | MT §4 | `train_all.py` | fold file `experiments/configurations/cv_folds.json` | PASS | |
 | 11 | Group-aware CV (trip never split) | MT §7, DE §7 | `training/cross_validation.py` (GroupKFold by trip_id) | fold json lists disjoint trips | PASS | |
 | 12 | Metrics: accuracy, precision, recall, F1, confusion, log loss, Top-1, miss rate, continuity, sequence-level, train/infer time | MT §5 | `evaluation/metrics.py`, `route_metrics.py` | per-model JSON + summary CSV; `test_metrics.py` | PASS | |
-| 13 | Explain primary selection metric | MT §5 | `docs/methodology.md` §6, report §5 | report | PASS | |
-| 14 | Comparison table (model, family, config, CV Macro-F1, Top-1, continuity, student Macro-F1, log loss, inference time) | DL §3.1, MT §6 | `build_report.py` | report §5 table generated from CSV | PASS | |
+| 13 | Explain primary selection metric | MT §5 | `docs/methodology.md` §6, report §3 | report | PASS | |
+| 14 | Comparison table (model, family, config, CV Macro-F1, Top-1, continuity, student Macro-F1, log loss, inference time) | DL §3.1, MT §6 | `build_report.py` | report §3.1 tables generated from CSV | PASS | |
 | 15 | Per-model answers A1–2, B5–6, C7–9 | DL §3.2 | `build_report.py` → `docs/model_explanations.md` | generated from records | PASS | |
 | 16 | Visualisations: CV Macro-F1, student Top-1/Macro-F1, log loss, confusion, epoch curves only where real | DL §3.3 | `make_report_figures.py` | `reports/figures/model_*.png` | PASS | |
 | 17 | Overfitting/underfitting evidence | DL §3.2 C9 | train-fold vs val-fold metrics in `run_cv` | `model_generalisation_gap.png`, per-model C9 text | PASS | |

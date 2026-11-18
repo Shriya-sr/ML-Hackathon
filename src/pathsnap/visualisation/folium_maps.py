@@ -53,7 +53,8 @@ def _legend(items):
 
 
 def trip_map(lat, lon, net, title: str, near_arcs=None, reference=None, clf_route=None, hmm_route=None,
-             gaps=None, breaks=None, max_points: int = 4000, max_network: int = 6000) -> folium.Map:
+             gaps=None, breaks=None, max_points: int = 4000, max_network: int = 6000, gps_radius: float = 2,
+             gps_opacity: float = 0.8) -> folium.Map:
     lat, lon = np.asarray(lat), np.asarray(lon)
     m = folium.Map(location=[float(np.median(lat)), float(np.median(lon))], zoom_start=14, tiles="OpenStreetMap",
                    control_scale=True)
@@ -96,8 +97,8 @@ def trip_map(lat, lon, net, title: str, near_arcs=None, reference=None, clf_rout
     step = max(1, int(np.ceil(len(lat) / max_points)))
     fg = folium.FeatureGroup(name="Raw GPS fixes", show=True)
     for i in range(0, len(lat), step):
-        folium.CircleMarker([float(lat[i]), float(lon[i])], radius=2, color=COL["gps"], fill=True,
-                            fill_opacity=0.8, weight=0, tooltip=f"fix {i}").add_to(fg)
+        folium.CircleMarker([float(lat[i]), float(lon[i])], radius=gps_radius, color=COL["gps"], fill=True,
+                            fill_opacity=gps_opacity, weight=0, tooltip=f"fix {i}").add_to(fg)
     fg.add_to(m)
     legend.append(("Raw GPS fix", COL["gps"]))
     folium.Marker([float(lat[0]), float(lon[0])], tooltip="start", icon=folium.Icon(color="green", icon="play")).add_to(m)

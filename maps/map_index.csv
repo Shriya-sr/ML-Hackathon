@@ -5,3 +5,5 @@ student_00000052_comparison.html,student_test,00000052,GPS + network + reference
 student_00000009_comparison.html,student_test,00000009,GPS + network + reference + classifier-only + HMM,0.8703527168732126,0.9122974261201144
 student_00000077_comparison.html,student_test,00000077,GPS + network + reference + classifier-only + HMM,0.7831756583993863,0.9094860649450268
 student_00000065_comparison.html,student_test,00000065,GPS + network + reference + classifier-only + HMM,0.9192708333333334,0.9453125
+zoom_student_00000077.html,student_test,00000077,zoom fixes 765-804: reference + classifier-only + HMM,0.6,1.0
+zoom_student_00000009.html,student_test,00000009,zoom fixes 50-89: reference + classifier-only + HMM,0.35,0.7

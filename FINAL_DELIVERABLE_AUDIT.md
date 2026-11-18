@@ -27,14 +27,14 @@ Verification date: 2026-11-18, Windows 11, Python 3.12.6, Node 22.19.
 
 | Requirement | Status | Evidence |
 |---|---|---|
-| One consolidated PDF, required structure (§2.2–7) | PASS | `reports/technical_report/PathSnap_Technical_Report.pdf` (23 pages), built by `scripts/build_report.py` from records |
-| EDA: preprocessing answer, patterns, features, missing values, trajectory plots, network plots, ≥1 Folium map, partitions named | PASS | report §2–4; Fig. 1–11 |
-| Comparison table in required columns | PASS | report §5 table |
-| Per-model questions A1–2, B5–6, C7–9 | PASS | report §5.1 / `docs/model_explanations.md` |
+| One consolidated PDF, required structure (§2.2–7) | PASS | `reports/technical_report/PathSnap_Technical_Report.pdf` (28 pages, headings in the brief's numbering 2.2–8), built by `scripts/build_report.py` from records |
+| EDA: preprocessing answer, patterns, features, missing values, trajectory plots, network plots, ≥1 Folium map, partitions named | PASS | report §2 (2.2–2.4); Fig. 1–11 |
+| Comparison table in required columns | PASS | report §3.1 (Tables 3.1a–c, incl. precision/recall) |
+| Per-model questions A1–2, B5–6, C7–9 | PASS | report §3.2 / `docs/model_explanations.md` |
 | Model visualisations (CV Macro-F1, student Top-1/F1, log loss, confusion, real training curves only) | PASS | Fig. 12–19 |
-| Bayesian optimisation answers 1–6 + comparison | PASS | report §6 |
-| HMM answers 1–6 + classifier vs HMM comparison | PASS | report §7 |
-| Folium section with screenshots | PASS | report §8 |
+| Bayesian optimisation answers 1–6 + comparison | PASS | report §4 |
+| HMM answers 1–6 + classifier vs HMM comparison | PASS | report §5 (5.1 held-out evaluator trips) |
+| Folium section with screenshots | PASS | report §6 (whole-trip + zoomed maps) |
 | UI screenshots | PASS | `reports/figures/ui_trip_*.png` (real running system, single machine) |
 | API console screenshots on the receiving laptop | PARTIAL / TEAM ACTION | `reports/figures/api_console_log.png` is the real console of this machine; the two-laptop capture must be taken on demo day |
 
@@ -46,7 +46,7 @@ Verification date: 2026-11-18, Windows 11, Python 3.12.6, Node 22.19.
 | 80 trips for fit/CV, 10 for comparison | PASS | `cv_folds.json`, `train_all.py` |
 | Group-aware CV | PASS | GroupKFold by trip |
 | Metrics incl. Top-1, miss rate, continuity, sequence-level, timing | PASS | summary CSV, decoder summary |
-| Primary metric explained, selection justified with evidence | PASS | report §5.2 (paired fold table) |
+| Primary metric explained, selection justified with evidence | PASS | report §3 (class-imbalance rationale) and §3.4 (paired fold table) |
 | Bayesian search, grouped CV, trials recorded, refit, student eval, cost | PASS | `optimisation_summary.json` (40 trials: 18 complete, 22 pruned; 22 min) |
 | Evaluator data not used for tuning/selection | PASS | `reports/final/DATA_LEAKAGE_AUDIT.md` |
 | HMM requirements + decoder tuned on train/student only | PASS | `tune_hmm.py` (train OOF), `hmm_params.json` |

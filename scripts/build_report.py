@@ -104,38 +104,76 @@ def load():
     return d
 
 
-def fit_verdict(r) -> str:
-    gap_f1, gap_t1 = r["gap_macro_f1"], r["gap_top1"]
-    st_vs_cv = r["st_macro_f1"] - r["cv_macro_f1"]
-    parts = [f"Training-fold Macro-F1 {r['train_macro_f1']:.4f} vs validation {r['cv_macro_f1']:.4f} (gap {gap_f1:+.4f}); "
-             f"Top-1 gap {gap_t1:+.4f}; fold std {r['cv_macro_f1_std']:.4f}; student-test Macro-F1 {r['st_macro_f1']:.4f} "
-             f"({st_vs_cv:+.4f} vs CV)."]
-    if gap_f1 > 0.03:
-        parts.append("The gap is large relative to the fold-to-fold spread, so the model fits training trips noticeably better than unseen "
-                     "trips: clear signs of overfitting (fully grown trees memorise training rows).")
-        if r["cv_macro_f1"] >= r["_best_cv"] - 0.001:
-            parts.append("Its validation score is nevertheless among the best, so bagging keeps this memorisation from hurting "
-                         "generalisation; stronger leaf/depth limits would shrink the gap without a clear validation gain.")
-    elif gap_f1 > 0.01:
-        parts.append("A moderate gap: some fitting to training rows, but validation performance stays close and stable, so variance is "
-                     "under control (mild overfitting).")
+def _history_len(name: str):
+    f = RES / f"training_history_{name}.csv"
+    if not f.exists():
+        return None
+    h = pd.read_csv(f)
+    return int(h.iloc[:, 0].max())
+
+
+def class_balance():
+    """(rows, positives) of the training candidate table, or None if the processed data is not present."""
+    f = ROOT / "data" / "processed" / "train_candidates.pkl"
+    if not f.exists():
+        return None
+    c = pd.read_pickle(f)
+    return int(len(c)), int((c["label"] == 1).sum())
+
+
+def fit_verdict(r, S) -> str:
+    """Q9 answered per model from its own numbers (train vs validation folds, fold spread, student-test)."""
+    tr, cv, gap, std = r["train_macro_f1"], r["cv_macro_f1"], r["gap_macro_f1"], r["cv_macro_f1_std"]
+    best = S["cv_macro_f1"].max()
+    rf, et = S.loc["random_forest"], S.loc["extra_trees"]
+    head = f"Training-fold Macro-F1 {tr:.4f} vs validation {cv:.4f} (gap {gap:+.4f}, fold std {std:.4f}). "
+    m = r["model"]
+    if m == "logistic_regression":
+        body = ("With 21 coefficients and an L2 penalty the model cannot memorise training trips, so there is no overfitting. Its "
+                f"training score is itself below the best validation score ({best:.4f}): that is mild underfitting, because one linear "
+                "boundary cannot express interactions such as 'heading only matters when the vehicle is moving'.")
+    elif m == "gaussian_nb":
+        body = (f"No overfitting (only per-class means and variances are learned), but clear underfitting: validation is {best - cv:.3f} "
+                f"below the best model and its student-test log loss ({r['st_log_loss']:.3f}) is several times that of any other model. "
+                "dist_m, dist_ratio and win_mean_dist_m are strongly correlated, and treating them as independent evidence makes the "
+                "probabilities over-confident.")
+    elif m == "knn":
+        body = (f"A moderate gap. With k = 25 neighbours taken from only {int(r['n_fit_rows_full']):,} stored rows the neighbourhoods "
+                f"are coarse, so validation stays {best - cv:.3f} below the best model and the probabilities are vote fractions "
+                f"(log loss {r['st_log_loss']:.3f}). The limit is the subsample size and the distance metric (bias), not variance.")
+    elif m == "random_forest":
+        body = ("The largest gap of all eight models: fully grown trees with 5-row leaves fit much of the training trips "
+                "(overfitting at the level of each tree). Averaging 200 decorrelated trees removes most of that variance, so its validation "
+                f"Macro-F1 is still the highest ({cv:.4f}) and its fold spread is normal. Depth or leaf limits would shrink the gap; "
+                "RF was not tuned further because HGB was selected.")
+    elif m == "extra_trees":
+        body = (f"The gap is about half of Random Forest's ({rf.gap_macro_f1:+.4f}): random split thresholds stop the trees from "
+                f"following training rows as closely. The cost is a little extra bias, with validation {cv:.4f} vs RF {rf.cv_macro_f1:.4f}.")
+    elif m == "hist_gradient_boosting":
+        n = _history_len("hist_gradient_boosting")
+        body = ("A moderate gap. " + (f"The boosting history of the final fit (Fig. 19, {n} iterations) shows training and "
+                                     "validation log loss falling together with no upturn in the validation curve, so boosting "
+                                     "has not started to overfit. " if n else "") +
+                "The remaining difference to Random Forest is within one fold standard "
+                f"deviation (RF {rf.cv_macro_f1:.4f}).")
+    elif m == "svm_rbf":
+        body = (f"A small gap, because the margin is regularised (C = 1) and only {int(r['n_fit_rows_full']):,} rows were used. That "
+                "subsample, not variance, is the limiting factor: validation trails the ensembles trained on all ~600k rows, so the "
+                "model underfits slightly relative to them.")
+    elif m == "mlp":
+        n = _history_len("mlp")
+        body = ((f"Early stopping (patience 10 on a 10% hold-out) ended training after {n} epochs (Fig. 19), " if n else "") +
+                f"which keeps the gap moderate. Validation ({cv:.4f}) is within {best - cv:.4f} of the best model, so the network "
+                "neither overfits nor underfits strongly.")
     else:
-        parts.append("Training and validation scores are almost equal: no evidence of overfitting.")
-    best = r["_best_cv"]
-    if r["cv_macro_f1"] < best - 0.02:
-        parts.append(f"Its validation Macro-F1 is {best - r['cv_macro_f1']:.3f} below the best model while the training score is also low, "
-                     "which points to underfitting (the model family is too restrictive for these features).")
-    elif r["cv_macro_f1"] < best - 0.005 and r["train_macro_f1"] < best:
-        parts.append(f"However, even its training-fold score ({r['train_macro_f1']:.4f}) is below the best model's validation score "
-                     f"({best:.4f}): the limitation is bias rather than variance, i.e. mild underfitting relative to the tree ensembles.")
-    if abs(st_vs_cv) <= 2 * r["cv_macro_f1_std"]:
-        parts.append("The student-test score lies within two fold standard deviations of CV, so CV generalised to the unseen trips.")
-    return " ".join(parts)
+        body = ""
+    d = r["st_macro_f1"] - cv
+    return head + body + f" Student-test Macro-F1 {r['st_macro_f1']:.4f} differs from CV by {d:+.4f} ({abs(d) / std:.1f} fold std)."
 
 
 def model_sections(s: pd.DataFrame):
     s = s.copy()
-    s["_best_cv"] = s["cv_macro_f1"].max()
+    S = s.set_index("model", drop=False)
     out = []
     for _, r in s.sort_values("cv_macro_f1", ascending=False).iterrows():
         t = MODEL_TEXT[r["model"]]
@@ -160,7 +198,7 @@ def model_sections(s: pd.DataFrame):
                    f"artifact {r['model_size_mb']:.1f} MB."),
             "C8": (f"Observation-level Top-1 accuracy {r['st_top1']:.4f}, Macro-F1 {r['st_macro_f1']:.4f}, log loss {r['st_log_loss']:.4f} "
                    f"(CV: Top-1 {r['cv_top1']:.4f}, Macro-F1 {r['cv_macro_f1']:.4f} ± {r['cv_macro_f1_std']:.4f}, log loss {r['cv_log_loss']:.4f})."),
-            "C9": fit_verdict(r),
+            "C9": fit_verdict(r, S),
         })
     return out
 
@@ -217,6 +255,7 @@ H2 = ParagraphStyle("H2", parent=styles["Heading2"], fontSize=12.5, spaceBefore=
 H3 = ParagraphStyle("H3", parent=styles["Heading3"], fontSize=11, spaceBefore=6, spaceAfter=3)
 BODY = ParagraphStyle("B", parent=styles["BodyText"], fontSize=9.5, leading=13)
 SMALL = ParagraphStyle("S", parent=BODY, fontSize=8, leading=10, textColor=colors.HexColor("#444444"))
+SMALLB = ParagraphStyle("SB", parent=SMALL, fontName="Helvetica-Bold", textColor=colors.HexColor("#0f2a4a"))
 CAP = ParagraphStyle("C", parent=SMALL, alignment=TA_CENTER, spaceAfter=8)
 TS = TableStyle([("FONT", (0, 0), (-1, -1), "Helvetica", 7.5), ("FONT", (0, 0), (-1, 0), "Helvetica-Bold", 7.5),
                  ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#dfe8f3")), ("GRID", (0, 0), (-1, -1), 0.3, colors.grey),
@@ -242,7 +281,7 @@ def img(path: Path, width_cm=16.5, caption=None):
 
 
 def table(rows, col_widths=None):
-    data = [[P(str(c), SMALL) if isinstance(c, str) and len(c) > 25 else c for c in row] for row in rows]
+    data = [[P(str(c), SMALLB if i == 0 else SMALL) if isinstance(c, str) else c for c in row] for i, row in enumerate(rows)]
     t = Table(data, colWidths=col_widths, repeatRows=1)
     t.setStyle(TS)
     return t
@@ -290,7 +329,7 @@ def heldout_pdf(d, dec) -> list:
     worse = ht[ht.hmm_top1 < ht.clf_top1]
     better = ht[ht.hmm_top1 > ht.clf_top1]
     lo = ht.sort_values("hmm_top1").iloc[0]
-    story = [P("7.1 Held-out evaluation on the evaluator trips", H2), P(
+    story = [P("5.1 Held-out evaluation on the evaluator trips", H2), P(
         f"The {h['n_trips']} evaluator trips ({h['n_fixes']:,} fixes) arrived after development was finished. They share no trip ID and no "
         "track file with the training or student-testing data. They were scored exactly once by scripts/evaluate_heldout.py with the "
         "frozen deployed artifacts (classifier, feature schema, tuned HMM parameters). The deployed MapMatcher predicts from "
@@ -365,7 +404,7 @@ def build_pdf(d, best):
         "laptops with server-side scoring.")]
     # ---- 2.2 dataset & EDA
     inv, val, traj = d["inv"], d["val"], d["traj"]
-    story += [P("2. Dataset understanding and exploratory data analysis", H1)]
+    story += [P("2. Dataset, preprocessing and features", H1), P("2.2 Dataset understanding and exploratory data analysis", H2)]
     if inv is not None:
         tr = inv[inv.partition == "train"]; st = inv[inv.partition == "student_test"]
         story += [P(
@@ -373,7 +412,7 @@ def build_pdf(d, best):
             f"({int(st.n_obs.sum()):,} fixes); every trip has the four files .track, .nodes, .arcs and .route (360 files, none missing). "
             + (f"The {d['ho']['summary']['n_trips']} evaluator-testing trips ({d['ho']['summary']['n_fixes']:,} fixes) were received after "
                "development was finished; they share no trip ID or track file with the other partitions, were not opened by EDA, training "
-               "or tuning, and are used only for the final held-out measurement in section 7.1. "
+               "or tuning, and are used only for the final held-out measurement in section 5.1. "
                if d["ho"] else "The evaluator-testing partition was not supplied; the API is prepared to load it from data/raw/evaluator_test. ") +
             f"Unless stated otherwise, EDA figures use both train and student-test (marked by colour); all modelling decisions "
             f"(candidate radius, features, hyperparameters, decoder parameters) were made on the training partition only."),
@@ -383,7 +422,7 @@ def build_pdf(d, best):
               "rows are stably re-sorted by timestamp and duplicate timestamps removed (none occurred), keeping a pointer to the raw row. "
               "Because trips lie on several continents, each trip is projected into the UTM zone of its centroid so that all distances, "
               "bearings and speeds are in metres. Per-fix labels are derived by a monotone dynamic-programming alignment of the fixes to "
-              "the ordered reference arcs (Section 3), because .route has about one entry per five fixes."),
+              "the ordered reference arcs (Section 2.3), because .route has about one entry per five fixes."),
             P("<b>Missing-value analysis.</b> " + (
                 f"Invalid coordinates: {int(val.n_invalid_coord.sum())}; non-numeric timestamps: {int(val.n_invalid_time.sum())}; duplicate rows: "
                 f"{int(val.n_duplicate_rows.sum())}; duplicate timestamps: {int(val.n_duplicate_timestamps.sum())}; non-monotonic trips: "
@@ -398,20 +437,21 @@ def build_pdf(d, best):
                 f"{100 * val.two_way_arc_frac.median():.0f}% of arcs (median) have a reverse twin, so direction must be inferred from motion. "
                 f"Networks contain several weakly connected fragments (median {val.n_weak_components.median():.0f}); reference routes "
                 f"contain {int(val.route_breaks.sum())} breaks in {int((val.route_breaks > 0).sum())} trips, so the reference is not "
-                "flawless ground truth. These observations motivated the features in Section 4.")),
+                "flawless ground truth. These observations motivated the features in Section 2.4.")),
             ]
     story += img(FIG.parent / "eda" / "figures" / "01_trip_size_distributions.png", caption="Fig. 1: trip size distributions (train vs student-test).")
     story += img(EDA / "figures" / "02_timestamp_intervals.png", caption="Fig. 2: sampling intervals and GPS gaps (all 90 trips).")
-    story += img(EDA / "figures" / "03_trip_locations.png", 13, caption="Fig. 3: trip centroids: the data is world-wide.")
-    story += img(EDA / "figures" / "04_network_size_connectivity.png", caption="Fig. 4: road-network size and connectivity per trip.")
-    story += img(EDA / "figures" / "05_data_quality_counts.png", 13, caption="Fig. 5: data-quality issue counts (missing-value analysis).")
-    story += img(EDA / "figures" / "08_representative_trajectories.png", caption="Fig. 6: GPS trajectory plots with road networks and reference routes (projected metres).")
+    story += img(EDA / "figures" / "03_trip_locations.png", 13, caption="Fig. 3: trip centroids of all 90 trips (train + student-test): the data is world-wide.")
+    story += img(EDA / "figures" / "04_network_size_connectivity.png", caption="Fig. 4: road-network size and connectivity per trip (train + student-test, 90 trips).")
+    story += img(EDA / "figures" / "05_data_quality_counts.png", 13, caption="Fig. 5: data-quality issue counts, missing-value analysis (train + student-test, 90 trips).")
+    story += img(EDA / "figures" / "08_representative_trajectories.png", caption="Fig. 6: GPS trajectory plots with road networks and reference routes, projected metres (student-test trips 00000052, "
+                 "00000009, 00000056 and 00000065).")
     story += img(EDA / "figures" / "06_gps_to_reference_distance.png", 12, caption="Fig. 7: distance from fixes to their aligned reference arc (train).")
     story += img(MAPS / "eda_train_00000054_raw.png", caption="Fig. 8: Folium map (training trip 00000054): raw GPS, road network and reference route; the parked "
                  "cluster near the start lies off the network.")
     # ---- preprocessing & candidates
     sw = d["sweep"]
-    story += [P("3. Preprocessing, label alignment and candidate generation", H1), P(
+    story += [P("2.3 Preprocessing, label alignment and candidate generation", H2), P(
         "<b>Label alignment.</b> For fix i and route position j the cost is min(distance, 100 m) + 15 m·(1−cos(motion, arc direction))/2; "
         "positions must be non-decreasing in time. C[i,j] = cost(i,j) + min over j'≤j of C[i−1,j'] is solved exactly in O(N·M). The heading "
         "term separates the two directions of a road on out-and-back routes. Fixes more than 60 m from their aligned arc are labelled −1 "
@@ -428,7 +468,7 @@ def build_pdf(d, best):
                     "was chosen as the knee: larger radii add candidates (cost and confusion) for little coverage.")]
     story += img(EDA / "figures" / "07_candidate_radius_sweep.png", caption="Fig. 9: candidate miss rate and candidates per fix vs radius and K (train).")
     # ---- features
-    story += [P("4. Feature engineering", H1), P(
+    story += [P("2.4 Feature engineering", H2), P(
         "Features are computed from the GPS track and the network only (no learned transforms), so they cannot leak across partitions; "
         "the scaler of scale-sensitive models is inside each Pipeline and re-fitted per training fold.")]
     rows = [["Group", "Features", "Why"]]
@@ -445,38 +485,69 @@ def build_pdf(d, best):
         for _, r in ab.iterrows():
             rows.append([r.dropped_group, int(r.n_features), f"{r.cv_macro_f1:.4f}", f"{r.delta_macro_f1:+.4f}", f"{r.cv_top1:.4f}", f"{r.delta_top1:+.4f}"])
         story += [table(rows)]
-    story += img(FIG / "feature_importance.png", 13, caption="Fig. 10: permutation importance on held-out training trips.")
-    story += img(FIG / "feature_ablation.png", 14, caption="Fig. 11: group ablation.")
+    story += img(FIG / "feature_importance.png", 13, caption="Fig. 10: permutation importance on held-out training trips (training partition).")
+    story += img(FIG / "feature_ablation.png", 14, caption="Fig. 11: feature-group ablation (5-fold trip-grouped CV on the 80 training trips).")
     # ---- models
-    story += [PageBreak(), P("5. Model experimentation and comparison", H1), P(
+    story += [PageBreak(), P("3. Model experimentation and comparison", H1), P(
         "All models use the same 21 features, the same five trip-grouped folds (GroupKFold, group = trip, seed 42) and the same student-test "
         "evaluation. Training rows: candidates of every second labelled fix of the training-fold trips; validation/test rows: all labelled "
-        "fixes. KNN and SVM are fitted on trip-stratified subsamples (60k / 20k rows) because of their super-linear cost. "
-        "<b>Primary selection metric</b>: CV Macro-F1 (threshold 0.5), read together with CV Top-1 (the map-matching objective), log loss "
-        "(probability quality, which matters because the probabilities become HMM emissions), fold stability and computational cost.")]
-    rows = [["Model", "Family", "Key configuration", "CV Macro-F1", "Top-1 (CV / student)", "Route contin.", "Student Macro-F1", "Log loss (student)", "Inference ms/1k fixes"]]
+        "fixes. KNN and SVM are fitted on trip-stratified subsamples (60k / 20k rows) because of their super-linear cost.")]
+    cb = class_balance()
+    story += [P("<b>Why Macro-F1 is the primary metric.</b> Each row is a (GPS fix, candidate road) pair, and the classes are imbalanced: " + (
+        f"of the {cb[0]:,} training candidate rows only {cb[1]:,} ({100 * cb[1] / cb[0]:.1f}%) are the correct road, so a model that always "
+        f"answers 'wrong road' would already reach {100 * (1 - cb[1] / cb[0]):.1f}% accuracy. " if cb else "most candidates are wrong roads. ") +
+        "Macro-F1 averages the F1 score of the 'correct road' and the 'wrong road' class with equal weight, so it penalises both missed true "
+        "segments (low recall on the positive class) and false matches (low precision), which plain accuracy hides. Because Macro-F1 uses a "
+        "fixed 0.5 threshold, it is read together with CV Top-1 (threshold-free, and the actual map-matching objective: one road per fix), "
+        "log loss (probability quality, which matters because the probabilities become HMM emissions), fold stability and computational "
+        "cost. Training-fold scores are only used to diagnose over/under-fitting, never for selection.")]
+    story += [P("3.1 Overall model comparison", H2)]
+    rows = [["Model", "Family", "CV Macro-F1 (± std)", "CV Top-1", "ST Top-1", "ST Macro-F1", "ST log loss",
+             "Route contin.", "ms per 1k fixes"]]
     for _, r in s.iterrows():
-        rows.append([r.display, r.family, r.key_config[:90], f"{r.cv_macro_f1:.4f} ± {r.cv_macro_f1_std:.4f}",
-                     f"{r.cv_top1:.4f} / {r.st_top1:.4f}", f"{r.st_route_continuity:.4f}", f"{r.st_macro_f1:.4f}", f"{r.st_log_loss:.4f}",
-                     f"{r.inference_ms_per_1k_fixes:.1f}"])
-    story += [table(rows, [2.3 * cm, 2.1 * cm, 3.6 * cm, 1.8 * cm, 1.9 * cm, 1.3 * cm, 1.5 * cm, 1.4 * cm, 1.4 * cm]),
+        rows.append([r.display, r.family, f"{r.cv_macro_f1:.4f} ± {r.cv_macro_f1_std:.4f}", f"{r.cv_top1:.4f}", f"{r.st_top1:.4f}",
+                     f"{r.st_macro_f1:.4f}", f"{r.st_log_loss:.4f}", f"{r.st_route_continuity:.4f}", f"{r.inference_ms_per_1k_fixes:.1f}"])
+    story += [P("<b>Table 3.1a</b> Headline metrics. CV = 5 trip-grouped folds on the 80 training trips; ST = the 10 student-test trips; "
+                "the last column is inference time.",
+                SMALL), table(rows, [3.3 * cm, 2.4 * cm, 2.1 * cm, 1.3 * cm, 1.3 * cm, 1.8 * cm, 1.4 * cm, 1.4 * cm, 1.6 * cm]),
               P("Route continuity here is that of the independent per-fix argmax route on the student-test trips (no HMM). Log loss is "
                 "applicable to every model because all produce probabilities (SVM via Platt scaling, KNN via weighted votes).", SMALL)]
-    for f, c in [("model_cv_macro_f1.png", "Fig. 12: CV Macro-F1 across all models (mean ± std over folds)."),
-                 ("model_student_top1_macro_f1.png", "Fig. 13: student-test Top-1 accuracy and Macro-F1."),
-                 ("model_log_loss.png", "Fig. 14: log loss comparison."),
-                 ("model_accuracy_vs_cost.png", "Fig. 15: accuracy vs inference cost (justifies selection)."),
-                 ("model_confusion_matrices.png", "Fig. 16: confusion matrices (optional diagnostic)."),
-                 ("model_fold_stability.png", "Fig. 17: per-fold validation Macro-F1."),
-                 ("model_generalisation_gap.png", "Fig. 18: training-fold vs validation-fold Macro-F1 (overfitting diagnosis)."),
-                 ("model_training_histories.png", "Fig. 19: epoch/iteration histories, shown only for models that produce them (MLP, HGB).")]:
-        story += img(FIG / f, caption=c)
-    story += [P("5.1 Per-model answers", H2)]
+    rows = [["Model", "Accuracy", "Precision (correct road)", "Recall (correct road)", "Macro precision", "Macro recall", "ROC-AUC",
+             "Brier", "Fit time (s)", "Size (MB)"]]
+    small = lambda v: f"{v:.3f}" if v < 1 else f"{v:.2f}"  # noqa: E731
+    for _, r in s.iterrows():
+        rows.append([r.display, f"{r.st_accuracy:.4f}", f"{r.st_precision_pos:.4f}", f"{r.st_recall_pos:.4f}", f"{r.st_precision_macro:.4f}",
+                     f"{r.st_recall_macro:.4f}", f"{r.st_roc_auc:.4f}", f"{r.st_brier:.3f}", small(r.fit_s_full), small(r.model_size_mb)])
+    story += [Spacer(1, 4), P("<b>Table 3.1b</b> Precision, recall, probability quality and cost (candidate level, student-test, threshold 0.5).",
+                              SMALL), table(rows, [3.0 * cm, 1.8 * cm, 1.8 * cm, 1.7 * cm, 1.7 * cm, 1.5 * cm, 1.8 * cm, 1.15 * cm, 1.3 * cm, 1.3 * cm])]
+    rows = [["Model", "Key configuration (initial hyperparameters)"]] + [[r.display, r.key_config.replace(";", "; ")] for _, r in s.iterrows()]
+    story += [Spacer(1, 4), P("<b>Table 3.1c</b> Configurations.", SMALL), table(rows, [3.2 * cm, 14.2 * cm])]
+    story += [P("<b>Earlier exploratory implementation.</b> Before this pipeline, an exploratory implementation was committed on the branch "
+                "sudeeksh (Sudeeksh Nayak, 18 November 2026). It had five classifiers (logistic regression, Gaussian Naive Bayes, random "
+                "forest, extra trees and scikit-learn GradientBoosting) with 3-fold trip-grouped CV, a small Gaussian-process "
+                "expected-improvement search over random-forest depth and leaf size, an HMM-style decoder, a FastAPI endpoint and a Folium "
+                "export. Its own hand-off notes (HANDOFF.md on that branch) record that a back-pointer bug in its route alignment "
+                "invalidated the first experiment run and that those artifacts were removed, so no results from that branch are reported "
+                "here. The branch is kept unchanged on GitHub as a record of that work.", SMALL)]
+    story += [P("3.2 Compulsory questions for every model", H2)]
     for m in model_sections(d["summary"]):
         story += [P(m["title"], H3), P(f"<b>1. Why suitable?</b> {m['A1']}"), P(f"<b>2. Strengths / limitations.</b> {m['A2']}"),
                   P(f"<b>5. Hyperparameters (initial).</b> {m['B5']}"), P(f"<b>6. Loss / objective.</b> {m['B6']}"),
                   P(f"<b>7. Student-test performance.</b> {m['C7']}"), P(f"<b>8. Top-1 / Macro-F1 / log loss.</b> {m['C8']}"),
                   P(f"<b>9. Over/under-fitting.</b> {m['C9']}")]
+    story += [P("3.3 Model visualisations", H2)]
+    for f, c in [("model_cv_macro_f1.png", "Fig. 12: CV Macro-F1 across all models (mean ± std over the 5 trip-grouped folds, training trips)."),
+                 ("model_student_top1_macro_f1.png", "Fig. 13: student-test Top-1 accuracy and Macro-F1."),
+                 ("model_log_loss.png", "Fig. 14: log loss comparison (CV and student-test)."),
+                 ("model_accuracy_vs_cost.png", "Fig. 15: accuracy vs inference cost (justifies selection)."),
+                 ("model_confusion_matrices.png", "Fig. 16: confusion matrices on the student-test candidates (threshold 0.5)."),
+                 ("model_fold_stability.png", "Fig. 17: per-fold validation Macro-F1 (training trips)."),
+                 ("model_generalisation_gap.png", "Fig. 18: training-fold vs validation-fold Macro-F1 (overfitting diagnosis)."),
+                 ("model_training_histories.png", "Fig. 19: iteration histories of the final fits, shown only for models that produce them. "
+                  "HGB: training and validation log loss per boosting iteration (10% hold-out). MLP: training loss and validation "
+                  "accuracy per epoch, because scikit-learn's MLPClassifier records only accuracy on its early-stopping split, not a "
+                  "validation loss; no validation-loss curve is drawn for it.")]:
+        story += img(FIG / f, caption=c)
     # selection
     rf = s.set_index("model")
     hgb = rf.loc["hist_gradient_boosting"]
@@ -489,7 +560,7 @@ def build_pdf(d, best):
         dL = folds["hist_gradient_boosting"].val_log_loss - folds[m].val_log_loss
         rows.append([rf.loc[m, "display"], f"{int((dF > 0).sum())}/5", f"{dF.mean():+.4f}", f"{int((dL < 0).sum())}/5", f"{dL.mean():+.4f}"])
     rfm = rf.loc["random_forest"]
-    story += [P("5.2 Model selection", H2), P(
+    story += [P("3.4 Model selection", H2), P(
         f"Ranked by mean CV Macro-F1 the leader is {best['display']} ({best['cv_macro_f1']:.4f} ± {best['cv_macro_f1_std']:.4f}); "
         f"HistGradientBoosting scores {hgb.cv_macro_f1:.4f} ± {hgb.cv_macro_f1_std:.4f}. Because every model uses the same folds, paired "
         "per-fold differences are more informative than the overlapping standard deviations (table below). HGB beats the linear, "
@@ -501,7 +572,7 @@ def build_pdf(d, best):
         f"and its artifact is {hgb.model_size_mb:.1f} MB (RF {rfm.model_size_mb:.0f} MB), which makes a 40-trial Bayesian search with "
         "5-fold CV feasible and deployment on Laptop 1 light. HGB was selected."), table(rows)]
     # ---- Bayesian optimisation
-    story += [PageBreak(), P("6. Bayesian hyperparameter optimisation (HistGradientBoosting)", H1)]
+    story += [PageBreak(), P("4. Bayesian hyperparameter optimisation (HistGradientBoosting)", H1)]
     if d["opt"]:
         o = d["opt"]
         bp = o["best_params"]
@@ -533,7 +604,7 @@ def build_pdf(d, best):
     story += img(FIG / "optimisation_history_importance.png", caption="Fig. 20: Optuna optimisation history and hyperparameter importance.")
     story += img(FIG / "optimisation_tuned_vs_untuned.png", 13, caption="Fig. 21: untuned vs tuned.")
     # ---- HMM
-    story += [PageBreak(), P("7. HMM and Viterbi route reconstruction", H1)]
+    story += [PageBreak(), P("5. HMM and Viterbi route reconstruction", H1)]
     hp = d["hmm"]["params"] if d["hmm"] else {}
     story += [P("<b>1. Hidden states.</b> At fix t the states are its candidate arcs (top 8 by emission score). Each state keeps arc_id, "
                 "projection fraction, perpendicular distance and classifier probability, so the candidate→road-segment correspondence is preserved."),
@@ -588,16 +659,39 @@ def build_pdf(d, best):
     story += img(FIG / "hmm_vs_classifier_per_trip.png", caption="Fig. 23: per-trip Top-1 and route continuity.")
     story += heldout_pdf(d, dec)
     # ---- Folium
-    story += [PageBreak(), P("8. Geographical visualisation with Folium", H1), P(
+    story += [PageBreak(), P("6. Geographical visualisation with Folium", H1), P(
         "Maps are generated by scripts/generate_maps.py (src/pathsnap/visualisation/folium_maps.py) from the real data and the deployed "
         "model's predictions. Layers: road network near the trajectory (grey), raw GPS fixes (blue), reference route (green, offline "
         "development maps only), classifier-only route (orange dashed), HMM reconstructed route (purple with direction arrows), start/end "
         "markers, GPS gaps and HMM chain breaks; a layer control and legend are included and the view is fitted to the trajectory. The "
         "interactive HTML files are in maps/html/.")]
+    fig_no = 25
     for f in sorted(MAPS.glob("student_*_comparison.png"))[:4]:
-        story += img(f, caption=f"Fig.: Folium comparison map: {f.stem.replace('_', ' ')}.")
+        story += img(f, caption=f"Fig. {fig_no}: Folium comparison map, whole student-test trip {f.stem.split('_')[1]} "
+                                f"(maps/html/{f.stem}.html).")
+        fig_no += 1
+    zooms = sorted(MAPS.glob("zoom_student_*.png"))
+    zoom_intro = []
+    if zooms:
+        zoom_intro = [P("<b>Zoomed comparisons.</b> At whole-trip zoom the GPS dots hide the route lines, so the two maps below zoom into a "
+                    "stretch where the classifier and the HMM disagree. Green = reference route (offline map only), orange dashed = "
+                    "classifier-only route, purple with arrows = HMM route, small blue dots = raw GPS fixes. The window is chosen "
+                    "automatically by scripts/generate_maps.py as the 40-fix stretch with the most classifier errors corrected by the HMM.")]
+    if zooms:
+        from reportlab.lib.utils import ImageReader
+        ims, caps = [], []
+        for f in zooms[:2]:
+            w, h = ImageReader(str(f)).getSize()
+            ims.append(Image(str(f), width=14.2 * cm, height=14.2 * cm * h / w))
+            caps.append(P(f"Fig. {fig_no}: zoomed Folium map, student-test trip {f.stem.split('_')[-1]} "
+                          f"(maps/html/{f.stem}.html).", CAP))
+            fig_no += 1
+        grid = Table([[x] for pair in zip(ims, caps) for x in pair], colWidths=[14.6 * cm])
+        grid.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP"), ("LEFTPADDING", (0, 0), (-1, -1), 1),
+                                  ("RIGHTPADDING", (0, 0), (-1, -1), 1)]))
+        story += [KeepTogether(zoom_intro + [Spacer(1, 4), grid])]
     # ---- API/UI/deployment
-    story += [PageBreak(), P("9. API, UI and two-laptop deployment", H1), P(
+    story += [PageBreak(), P("7. API, UI and two-laptop deployment", H1), P(
         "<b>Laptop 1</b> runs the FastAPI backend (python -m backend.main, bound to 0.0.0.0:8000). On startup it loads the final classifier, "
         "the feature schema and the tuned HMM parameters, and lists the trips of data/raw/evaluator_test (EVALUATION mode) or, while that "
         "folder is empty, the student-test trips (DEVELOPMENT mode, flagged in the UI). POST /api/predict/{trip_id} executes cleaning → "
@@ -610,25 +704,39 @@ def build_pdf(d, best):
             ["GET", "/api/trips/{id}/metadata", "fixes, bbox, network size, gaps"], ["POST", "/api/predict/{id}", "full pipeline + server-side metrics"],
             ["GET", "/api/results/{id}", "cached result"], ["GET", "/api/results/{id}/explain/{fix}", "candidate probabilities and features for a fix"]]
     story += [table(rows, [1.5 * cm, 5.5 * cm, 9 * cm])]
-    for f, c in [("ui_trip_00000052.png", "Fig.: working UI: trip 00000052 processed through the live API."),
-                 ("ui_trip_00000009.png", "Fig.: working UI: trip 00000009."), ("api_console_log.png", "Fig.: API console on the receiving machine (request log).")]:
-        story += img(FIG / f, caption=c)
-    story += [P("Note: the UI and console captures above were taken on a single development machine (API and UI on one host, accessed over "
-                "the LAN interface where stated). The two-laptop screenshots required by the brief must be taken during the live demonstration.", SMALL)]
+    for f, c in [("ui_trip_00000087.png", "Fig. {n}: working UI in EVALUATION mode: held-out evaluator trip 00000087 processed through the "
+                                          "live API (Top-1 0.991, route continuity 1.000)."),
+                 ("ui_trip_00000015.png", "Fig. {n}: working UI in EVALUATION mode: evaluator trip 00000015, the longest trip (6,854 fixes)."),
+                 ("api_console_log.png", "Fig. {n}: API request log of the receiving machine. This image is rendered from the server's log "
+                                         "file (experiments/logs/api_demo_console.log by scripts/render_console_log.py); it is not a "
+                                         "screenshot. It is replaced by a real Laptop 1 console screenshot taken during the two-laptop run.")]:
+        if (FIG / f).exists():
+            story += img(FIG / f, caption=c.format(n=fig_no))
+            fig_no += 1
+    story += [P("Note: the UI captures above were taken with headless Chrome against the live API in EVALUATION mode, with API and UI on "
+                "one machine. The two-laptop screenshots required by the brief (the UI on Laptop 2 and the console of Laptop 1 showing "
+                "Laptop 2's IP) are taken during the live demonstration.", SMALL)]
+    story += [P("8. Academic integrity and AI-assistance disclosure", H1), P(
+        "The implementation was produced with substantial help from an AI coding assistant (Claude Code), working under the team's "
+        "direction; this is disclosed in the README as the submission guidelines require. Every number, table and figure in this report "
+        "is generated by the repository's scripts from the supplied data and the saved experiment records (scripts/build_report.py reads "
+        "them directly); nothing is typed in by hand. The evaluator partition was used only for the single held-out measurement in "
+        "section 5.1, after all modelling decisions were fixed. Each team member owns one area of the work and is responsible for "
+        "explaining and defending it (TEAM_CONTRIBUTIONS.md, reports/viva/).")]
     # ---- testing, limitations, conclusion
-    story += [P("10. Testing and edge cases", H1), P(
+    story += [P("9. Testing and edge cases", H1), P(
         "Automated tests (pytest + vitest) cover malformed/missing/empty files, invalid coordinates, duplicate and out-of-order timestamps, "
         "invalid node/arc/route references, single-observation trips, candidate generation (none/one/many, fallback, cap, dense grids), "
         "label-independence of candidates, feature schema/order checks, class-column alignment, missing/corrupt artifacts, Viterbi against "
         "brute force, empty/single/variable-size sequences, disconnected states, forced gap breaks, impossible speeds, route metrics against "
         "reference implementations, API status codes (404/405/422/503/504), repeated and concurrent requests, ground-truth leakage, and "
         "end-to-end runs on synthetic and real trips. Results are recorded in FINAL_ACCEPTANCE_TEST.md.")]
-    story += [P("11. Limitations", H1), P(
+    story += [P("10. Limitations", H1), P(
         "Arcs are straight segments (no curved shape points); the candidate miss rate bounds accuracy; reference routes contain breaks and "
         "parked periods, so labels are approximate; KNN and SVM were trained on subsamples; " + (
         "the held-out evaluator set is only 10 trips, so its trip-level spread is large (one trip is decoded worse by the HMM); "
         if d["ho"] else "the evaluator partition was not available, so final-evaluation numbers cannot be reported here; ") + "the two-laptop LAN demonstration must be performed and captured by the team.")]
-    story += [P("12. Conclusion", H1), P(
+    story += [P("11. Conclusion", H1), P(
         "A complete, reproducible map-matching system was built and evaluated with trip-grouped validation. Gradient-boosted and bagged "
         "tree ensembles beat linear, generative, instance-based and kernel models consistently across folds, although by modest margins on "
         "Macro-F1 (the heading and relative-distance features already make the problem nearly separable for a linear model); "
@@ -651,7 +759,12 @@ def build_pdf(d, best):
         "All configurations are in configs/*.yaml; per-experiment records (parameters, seed, feature version, fold metrics, git commit, "
         "timestamps) are in experiments/results/experiment_*.json and experiments/optimisation/. AI assistance: the implementation was produced "
         "with the help of an AI coding assistant (Claude Code) under the team's direction; every number in this report is produced by the "
-        "repository's scripts from the supplied data.", SMALL)]
+        "repository's scripts from the supplied data.", SMALL),
+        P("<b>Provenance of the experiment records.</b> The records cite git_commit be932cd with git_dirty = true: they were produced "
+          "from the working tree while the review-1 checkpoint commit was HEAD, and committed in efefb9b. The commit history was later "
+          "rewritten to change commit messages only (authorship); be932cd therefore appears on GitHub as e0fec1f, with an identical file "
+          "tree. A clean clone rebuilt the features and retrained two models (logistic regression and HistGradientBoosting) and "
+          "reproduced their recorded scores exactly (FINAL_ACCEPTANCE_TEST.md, section 3).", SMALL)]
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
 

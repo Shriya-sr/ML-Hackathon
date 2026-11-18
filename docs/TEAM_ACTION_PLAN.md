@@ -48,7 +48,7 @@ Command sheets:
 
 1. Read your viva section (models, grouped CV, metrics, Bayesian optimisation).
 2. Know these files and numbers: `experiments/results/model_summary.csv`, `experiments/optimisation/tuned_vs_untuned.csv`,
-   and the model-selection table in the report (§5.2). Be ready to explain why HGB was chosen over the tied Random Forest
+   and the model-selection table in the report (§3.4). Be ready to explain why HGB was chosen over the tied Random Forest
    and why tuning barely changed CV Macro-F1.
 
 ### Everyone
